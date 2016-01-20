@@ -8,8 +8,8 @@
 #ifndef H5CHUNKHANDLE_HPP
 #define	H5CHUNKHANDLE_HPP
 
-//#include "typedefs.hpp"
-typedef int MemArrSizeType;
+#include "typedefs_val_type.hpp"
+#include "typedefs_array_sizes.hpp"
 #include <H5Cpp.h>
 
 struct H5ChunkHandle {

@@ -13,45 +13,15 @@
 #include <list>
 #include <sstream>
 
-//template<typename Key, typename T, typename Compare=less<Key>,
-//         typename Alloc = allocator<pair<const Key,T> > >
-//class DropMap : private std::map<Key, T, Compare, Alloc> {
-//public:
-//  /* Ctr */
-//  DropMap(size_t const ctrMaxNumChunks)
-//  : std::map<Key, T, Compare, Alloc>(), maxNumChunks(ctrMaxNumChunks) {}
-//  
-//  /* Insert a single element */
-//  std::pair<typename DropMap::<Key, T, Compare, Alloc>::iterator, bool> insert( typename DropMap::<Key, T, Compare, Alloc>::value_type const & val ) {
-//    if(this->size()==maxNumChunks) {
-//      drop();
-//    }
-//    pair<typename DropMap<Key, T, Compare, Alloc>::iterator, bool> newlyInserted = static_cast<map<Key, T, Compare, Alloc>*>(this)->insert(val);
-//    l.push_back(newlyInserted.first);
-//    
-//    return newlyInserted;
-//  }
-//  
-//private:
-//  size_t maxNumChunks;
-//  std::list<typename DropMap<Key, T, Compare, Alloc>::iterator> l;
-//  
-//  void drop() {
-//    erase(*l.begin());
-//    l.erase(l.begin());
-//  }
-//};
-
 class H5ChunkCatalogue {
 public:
-  typedef std::map<size_t, H5ChunkHandle> MapType;
-  
-//  H5ChunkCatalogue(std::string ctrName)
-  H5ChunkCatalogue(std::string ctrName, size_t ctrMaxNumChunks)
+  /* Ctor */
+  H5ChunkCatalogue( std::string ctrName, size_t ctrMaxNumChunks )
   : name(ctrName), maxNumChunks(ctrMaxNumChunks) {}
   
-  H5ChunkHandle & getEmptyChunk( size_t id, MemArrSizeType nElems, int nMemRows ) {
-    if(cat.size()==maxNumChunks) {
+  /**/
+  H5ChunkHandle & getEmptyChunk( size_t chunkId, MemArrSizeType nElems, int nMemRows ) {
+    if(chunkMap.size()==maxNumChunks) {
       drop();
     }
     
@@ -79,31 +49,48 @@ public:
     chunk.file.openDataSet("val").createAttribute("nElems",   H5::PredType::NATIVE_INT, H5S_SCALAR);
     chunk.file.openDataSet("rowPtr").createAttribute("nMemRows", H5::PredType::NATIVE_INT, H5S_SCALAR);
     
+    /* Insert chunk in map */
+    chunkMap.insert(ChunkMap::value_type(chunkId, chunk));
     
-    /* Insert */
-    cat.insert(std::pair<size_t, H5ChunkHandle>(id, chunk));
+    /* Remember chunk as latest inserted one */
+    ChunkHistoryList::value_type histEntry = chunkMap.find(chunkId);
+    chunkHist.push_back(histEntry);
     
-    return getChunk(id);
+    /* Return handle to empty chunk */
+    return histEntry->second;
   }
   
+  /**/
   bool hasChunk( size_t chunkId ) {
-    return (cat.find(chunkId)!=cat.end());
+    return (chunkMap.find(chunkId) != chunkMap.end());
   }
-
-  H5ChunkHandle & getChunk( size_t id ) {
-    return cat.find(id)->second;
-  }
-
-private:
-  std::string name;
-  size_t count;
-  size_t maxNumChunks;
-  MapType cat;
-  std::list<MapType::iterator> insertionList;
   
+  /**/
+  H5ChunkHandle & getChunk( size_t chunkId ) {
+    return chunkMap.find(chunkId)->second;
+  }
+  
+  
+private:
+  typedef std::map<size_t, H5ChunkHandle> ChunkMap;
+  typedef std::list<ChunkMap::iterator> ChunkHistoryList;
+  
+  std::string name;
+  size_t maxNumChunks;
+  size_t count;
+  ChunkMap chunkMap;
+  ChunkHistoryList chunkHist;
+  
+  /**/
   void drop( void ) {
-    cat.erase(*insertionList.begin());
-    insertionList.erase(insertionList.begin());
+    /* Look up oldest chunk */
+    ChunkHistoryList::value_type oldestChunkMapElem = *(chunkHist.begin());
+    
+    /* Erase oldest chunk from map */
+    chunkMap.erase(oldestChunkMapElem);
+    
+    /* Erase oldest chunk from history */
+    chunkHist.pop_front();
   }
 };
 
