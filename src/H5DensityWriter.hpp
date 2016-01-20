@@ -137,9 +137,9 @@ class H5DensityWriter
 //      file->createGroup("/help")
       
       /* Create dataset densdataset */
-      hsize_t densdims[3] = {numberOfVoxels[0],/* Create dataspace ... */
-                             numberOfVoxels[1],
-                             numberOfVoxels[2]};
+      hsize_t densdims[3] = {hsize_t(numberOfVoxels[0]),/* Create dataspace ... */
+                             hsize_t(numberOfVoxels[1]),
+                             hsize_t(numberOfVoxels[2])};
       H5::DataSpace densspace(3, densdims);
       H5::DataSet * densdataset;/* Create dataset ... */
       densdataset = new H5::DataSet(file->createDataSet(
