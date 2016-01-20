@@ -14,6 +14,8 @@
 #include "csrmv.hpp"
 #include "RayGenerators.hpp"
 
+#include <mpi.h>
+
 
 /* [512 * 1024 * 1024 / 4] (512 MiB of float or int); max # of elems in COO
  * matrix arrays on GPU */
@@ -23,9 +25,17 @@ MemArrSizeType const LIMNNZ(134217728);
 ListSizeType const LIMM(LIMNNZ/VGRIDSIZE);
 
 int main(int argc, char** argv) {
+
 #if MEASURE_TIME
   clock_t time1 = clock();
 #endif
+  
+  int mpi_rank;
+  int mpi_size;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+  
   int const nargs(2);
   if(argc!=nargs+1) {
     std::cerr << "Error: Wrong number of arguments. Exspected: "
@@ -52,11 +62,11 @@ int main(int argc, char** argv) {
   /* Number of non-zeros, row indices */
   ListSizeType effM; std::vector<int> yRowId_host;
   
-  do {
+  {
     int tmp_effM(0);
     readHDF5_MeasList<val_t>(yRowId_host, tmp_effM, fn);
     effM = ListSizeType(tmp_effM);
-  } while(false);
+  }
   
   int * yRowId_devi = NULL;
   mallocD_MeasList(yRowId_devi, effM);
@@ -87,11 +97,13 @@ int main(int argc, char** argv) {
   ChunkGridSizeType NChunks(nChunks<ChunkGridSizeType, MemArrSizeType>
         (maxNnz, MemArrSizeType(LIMM)*MemArrSizeType(VGRIDSIZE))
   );
+
 #if MEASURE_TIME
   clock_t * chunkTimes = new clock_t[NChunks+1];
   chunkTimes[0] = clock();
   printTimeDiff(chunkTimes[0], time1, "Time before SM calculation: ");
 #endif /* MEASURE_TIME */
+
 #if DEBUG
   MemArrSizeType totalNnz(0);
   std::cout << "Calculate system matrix with #LOR = " << effM
@@ -101,9 +113,10 @@ int main(int argc, char** argv) {
             << ", which means " << NChunks
             << " chunks have to be calculated." << std::endl;
 #endif
-  for(ChunkGridSizeType chunkId=0;
-        chunkId<NChunks;
-        chunkId++) {
+
+  for(ChunkGridSizeType chunkId =  ChunkGridSizeType(mpi_rank);
+                        chunkId <  NChunks;
+                        chunkId += ChunkGridSizeType(mpi_size)) {
     ListSizeType m = nInChunk(chunkId, effM, LIMM);
     ListSizeType ptr = chunkPtr(chunkId, LIMM);
     
@@ -120,21 +133,26 @@ int main(int argc, char** argv) {
           handle);
     HANDLE_ERROR(cudaDeviceSynchronize());
     memcpyD2H<MemArrSizeType>(nnz_host, nnz_devi, 1);
+
 #if MEASURE_TIME
     chunkTimes[chunkId+1] = clock();
     printTimeDiff(chunkTimes[chunkId+1], chunkTimes[chunkId], "Time for latest chunk: ");
 #endif
+
 #if DEBUG
     totalNnz += nnz_host[0];
     std::cout << "Finished chunk " << chunkId
               << " of " << NChunks
               << ", found " << nnz_host[0] << " elements." << std::endl;
 #endif
+
   }
+
 #if MEASURE_TIME
   clock_t time3 = clock();
   printTimeDiff(time3, chunkTimes[0], "Time for SM calculation: ");
 #endif /* MEASURE_TIME */
+
 #if DEBUG
   std::cout << "Found: " << totalNnz << " elements." << std::endl;
 #endif
@@ -145,6 +163,9 @@ int main(int argc, char** argv) {
   cudaFree(aVxlId_devi);
   cudaFree(aVal_devi);
   cudaFree(nnz_devi);
+
+  MPI_Finalize();
+
 #if MEASURE_TIME
   clock_t time4 = clock();
   printTimeDiff(time4, time3, "Time after SM calculation: ");
