@@ -97,10 +97,10 @@ public:
   
   
 private:
-  typedef std::list<std::map<size_t, GpuChunkHandle>::iterator> ChunkHistoryList;
-  typedef std::list<GpuChunkMem*> AvailMemList;
   typedef std::vector<GpuChunkMem> MemVector;
+  typedef std::list<GpuChunkMem*> AvailMemList;
   typedef std::map<size_t, GpuChunkHandle> ChunkMap;
+  typedef std::list<ChunkMap::iterator> ChunkHistoryList;
   size_t maxNumChunks;
   MemVector memVec;
   ChunkMap chunkMap;
