@@ -6,49 +6,96 @@
  */
 
 #ifndef CPUCHUNKCATALOGUE_HPP
-#define	CPUCHUNKCATALOGUE_HPP
+#define CPUCHUNKCATALOGUE_HPP
 
+#include "typedefs_val_type.hpp"
+#include "typedefs_array_sizes.hpp"
 #include "CpuChunkHandle.hpp"
+#include "CpuChunkMem.hpp"
+#include <vector>
+#include <map>
+#include <list>
 
 class CpuChunkCatalogue {
 public:
-  CpuChunkCatalogue(std::string ctrName, size_t ctrMaxNumChunks)
-  : name(ctrName), maxNumChunks(ctrMaxNumChunks) {}
-  
-  CpuChunkHandle & getEmptyChunk( size_t id, MemArrSizeType nElems, int nMemRows ) {
-    if(cat.size()==maxNumChunks) {
-      emptySlot = drop(dropCandidate);
-    } else {
-      cat.insert(std::pair<size_t, CpuChunkHandle>(id, CpuChunkHandle()));
-      emptySlot = cat.find(id);
+  /**/
+  CpuChunkCatalogue( size_t ctrMaxNumChunks, MemArrSizeType memNElemSlots, int memNMemRowSlots )
+  : maxNumChunks(ctrMaxNumChunks) {
+    /* Create vector of the right number of empty CpuChunkMem objects */
+    memVec = MemVector(ctrMaxNumChunks, CpuChunkMem());
+    
+    /* Initialize CpuChunkMem objects in vec, i.e. allocate CPU memory for them */
+    for(MemVector::iterator it=memVec.begin(); it<memVec.end(); it++) {
+      it->init(memNElemSlots, memNMemRowSlots);
     }
     
-    /* Create chunk */
-    CpuChunkHandle chunk;
-    chunk.nElems = nElems;
-    chunk.nMemRows = nMemRows;
-    chunk.val    = new val_t[nElems];
-    chunk.colId  = new int[nElems];
-    chunk.rowPtr = new int[nMemRows+1];
-    
-    /* Insert chunk */
-    cat.insert(std::pair<size_t, CpuChunkHandle>(id, chunk));
-    
-    return getChunk(id);
+    /* Build up list of pointers to available CpuChunkMem objects */
+    for(MemVector::iterator it=memVec.begin(); it<memVec.end(); it++) {
+      availMem.push_back(&(*it));
+    }
   }
   
-  bool hasChunk( size_t chunkId );
-    return (cat.find(chunkId)!=cat.end());
+  /**/
+  CpuChunkHandle & getEmptyChunk( size_t chunkId, MemArrSizeType nElems, int nMemRows ) {
+    /* Make place if necessary */
+    if(availMem.size()==0) {
+      drop();
+    }
+    
+    /* Create CpuChunkHandle object in next available CpuChunkMem */
+    CpuChunkMem * memSlot = *(availMem.begin());
+    CpuChunkHandle chunk(memSlot, nElems, nMemRows);
+    
+    /* Set used CpuChunkMem to 'unavailable' */
+    availMem.pop_front();
+    
+    /* Insert chunk in map */
+    chunkMap.insert(ChunkMap::value_type(chunkId, chunk));
+    
+    /* Remember chunk as latest inserted one */
+    ChunkHistoryList::value_type histEntry = chunkMap.find(chunkId);
+    chunkHist.push_back(histEntry);
+    
+    /* Return handle to empty chunk */
+    return histEntry->second;
   }
   
+  /**/
+  bool hasChunk( size_t chunkId ) {
+    return (chunkMap.find(chunkId) != chunkMap.end());
+  }
+  
+  /**/
   CpuChunkHandle & getChunk( size_t chunkId ) {
-    return cat.find(id)->second;
+    return chunkMap.find(chunkId)->second;
   }
 
 private:
-  std::string name;
-  size_t makNumChunks;
-  std::map<size_t, CpuChunkHandle> cat;
+  typedef std::list<std::map<size_t, CpuChunkHandle>::iterator> ChunkHistoryList;
+  typedef std::list<CpuChunkMem*> AvailMemList;
+  typedef std::vector<CpuChunkMem> MemVector;
+  typedef std::map<size_t, CpuChunkHandle> ChunkMap;
+  size_t maxNumChunks;
+  MemVector memVec;
+  ChunkMap chunkMap;
+  ChunkHistoryList chunkHist;
+  AvailMemList availMem;
+  
+  /**/
+  void drop() {
+    /* Look up which memory is used by the oldest chunk */
+    ChunkHistoryList::value_type oldestChunkMapElem = *(chunkHist.begin());
+    CpuChunkMem * memoryBeingFreed = oldestChunkMapElem->second.mem;
+    
+    /* Erase oldest chunk from map */
+    chunkMap.erase(oldestChunkMapElem);
+    
+    /* Erase oldest chunk from chunkHist */
+    chunkHist.pop_front();
+    
+    /* Assign memory as 'available' */
+    availMem.push_back(memoryBeingFreed);
+  }
 };
 
 #endif	/* CPUCHUNKCATALOGUE_HPP */
