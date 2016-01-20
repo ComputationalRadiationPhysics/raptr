@@ -6,7 +6,9 @@
 #ifndef GPUCHUNKMEM_HPP
 #define	GPUCHUNKMEM_HPP
 
-#include "typedefs.hpp"
+#include <cstdlib>
+#include "typedefs_val_type.hpp"
+#include "typedefs_array_sizes.hpp"
 #include "cuda_wrappers.hpp"
 
 

@@ -6,7 +6,8 @@
 #ifndef GPUCHUNKHANDLE_HPP
 #define	GPUCHUNKHANDLE_HPP
 
-#include "typedefs.hpp"
+#include "typedefs_val_type.hpp"
+#include "typedefs_array_sizes.hpp"
 #include "GpuChunkMem.hpp"
 
 
@@ -30,6 +31,7 @@ public:
     mem      = ctrMem;
     val      = ctrMem->valMem;
     colId    = ctrMem->colIdMem;
+    rowId    = ctrMem->rowIdMem;
     rowPtr   = ctrMem->rowPtrMem;
   }
   

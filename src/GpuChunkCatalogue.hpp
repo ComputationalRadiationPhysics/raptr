@@ -6,6 +6,8 @@
 #ifndef GPUCHUNKCATALOGUE_HPP
 #define GPUCHUNKCATALOGUE_HPP
 
+#include "typedefs_val_type.hpp"
+#include "typedefs_array_sizes.hpp"
 #include "cuda_wrappers.hpp"
 #include "GpuChunkHandle.hpp"
 #include "GpuChunkMem.hpp"
