@@ -15,6 +15,8 @@
 #include "mlemOperations.hpp"
 #include "RayGenerators.hpp"
 
+#include <mpi.h>
+
 /* [512 * 1024 * 1024 / 4] (512 MiB of float or int); max # of elems in COO
  * matrix arrays on GPU */
 MemArrSizeType const LIMNNZ(134217728);
@@ -23,9 +25,17 @@ MemArrSizeType const LIMNNZ(134217728);
 ListSizeType const LIMM(LIMNNZ/VGRIDSIZE);
 
 int main(int argc, char** argv) {
+
 #if MEASURE_TIME
   clock_t time1 = clock();
 #endif /* MEASURE_TIME */
+  
+  int mpi_rank;
+  int mpi_size;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+  
   int const nargs(3);
   if(argc!=nargs+1) {
     std::cerr << "Error: Wrong number of arguments. Exspected: "
@@ -58,7 +68,7 @@ int main(int argc, char** argv) {
     int tmp_effM(0);
     readHDF5_MeasVct(yRowId_host, yVal_host, tmp_effM, fn);
     effM = ListSizeType(tmp_effM);
-  };
+  }
   
   int * yRowId_devi = NULL;
   val_t * yVal_devi = NULL;
@@ -78,6 +88,7 @@ int main(int argc, char** argv) {
     
   /* DENSITY X */
   std::vector<val_t> x_host(VGRIDSIZE, 0.);
+  std::vector<val_t> xMpi(VGRIDSIZE, 0.);
   val_t * x_devi = NULL;
   mallocD<val_t>(x_devi, VGRIDSIZE);
   memcpyH2D<val_t>(x_devi, &x_host[0], VGRIDSIZE);
@@ -92,18 +103,18 @@ int main(int argc, char** argv) {
         aEcsrCnlPtr_devi, aVxlId_devi, aVal_devi, NCHANNELS, LIMM, VGRIDSIZE);
   MemArrSizeType * nnz_devi = NULL;
   mallocD<MemArrSizeType>(nnz_devi,          1);
+
 #if MEASURE_TIME
   clock_t time2 = clock();
   printTimeDiff(time2, time1, "Time before BP: ");
 #endif /* MEASURE_TIME */
   
   /* BACKPROJECT */
-  ChunkGridSizeType NChunks(nChunks<ChunkGridSizeType, MemArrSizeType>
-        (maxNnz, MemArrSizeType(LIMM)*MemArrSizeType(VGRIDSIZE))
-  );
-  for(ChunkGridSizeType chunkId=0;
-        chunkId<NChunks;
-        chunkId++) {
+  ChunkGridSizeType NChunks(nChunks<ChunkGridSizeType, MemArrSizeType> (maxNnz, MemArrSizeType(LIMM)*MemArrSizeType(VGRIDSIZE)));
+  
+  for(ChunkGridSizeType chunkId =  ChunkGridSizeType(mpi_rank);
+                        chunkId <  NChunks;
+                        chunkId += mpi_size) {
     ListSizeType m   = nInChunk(chunkId, effM, LIMM);
     ListSizeType ptr = chunkPtr(chunkId, LIMM);
     
@@ -126,26 +137,38 @@ int main(int argc, char** argv) {
           m, VGRIDSIZE, *nnz_host, &alpha, A, aVal_devi, aEcsrCnlPtr_devi, aVxlId_devi,
           &(yVal_devi[ptr]), &beta, x_devi);
     HANDLE_ERROR(cudaDeviceSynchronize());
-  }
+    
+  } /* for(ChunkGridSizeType chunkId =  ChunkGridSizeType(mpi_rank);
+     *                       chunkId <  NChunks;
+     *                       chunkId += mpi_size) */
+  
 #if MEASURE_TIME
   clock_t time3 = clock();
   printTimeDiff(time3, time2, "Time for BP: ");
 #endif /* MEASURE_TIME */
   
-  /* Normalize */
-  val_t norm = sum<val_t>(x_devi, VGRIDSIZE);
-  std::cout << "Norm: " << norm << std::endl;
-  HANDLE_ERROR(cudaDeviceSynchronize());
-  scales<val_t>(x_devi, val_t(1./norm), VGRIDSIZE);
-  HANDLE_ERROR(cudaDeviceSynchronize());
+  /* Reduce backprojected image between processes */
+  memcpyD2H(&x_host[0], x_devi, VGRIDSIZE);
+  MPI_Reduce(&x_host[0], &xMpi[0], VGRIDSIZE, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
   
-  /* Copy back to host */
-  memcpyD2H<val_t>(&x_host[0], x_devi, VGRIDSIZE);
-  HANDLE_ERROR(cudaDeviceSynchronize());
-  
-  /* Write to file */
-  writeHDF5_Density(&x_host[0], on, grid);
-  
+  if(mpi_rank == 0) {
+    memcpyH2D(x_devi, &xMpi[0], VGRIDSIZE);
+          
+    /* Normalize */
+    val_t norm = sum<val_t>(x_devi, VGRIDSIZE);
+    std::cout << "Norm: " << norm << std::endl;
+    HANDLE_ERROR(cudaDeviceSynchronize());
+    scales<val_t>(x_devi, val_t(1./norm), VGRIDSIZE);
+    HANDLE_ERROR(cudaDeviceSynchronize());
+
+    /* Copy back to host */
+    memcpyD2H<val_t>(&x_host[0], x_devi, VGRIDSIZE);
+    HANDLE_ERROR(cudaDeviceSynchronize());
+
+    /* Write to file */
+    writeHDF5_Density(&x_host[0], on, grid);
+  }
+    
   /* Cleanup */
   cudaFree(yRowId_devi);
   cudaFree(yVal_devi);
@@ -158,6 +181,8 @@ int main(int argc, char** argv) {
   cudaFree(aVxlId_devi);
   cudaFree(aVal_devi);
   cudaFree(nnz_devi);
+  
+  MPI_Finalize();
   
 #if MEASURE_TIME
   clock_t time4 = clock();
