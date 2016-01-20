@@ -15,6 +15,7 @@
 #include "RayGenerators.hpp"
 
 #include <mpi.h>
+#include <vector>
 
 
 /* [512 * 1024 * 1024 / 4] (512 MiB of float or int); max # of elems in COO
@@ -99,9 +100,10 @@ int main(int argc, char** argv) {
   );
 
 #if MEASURE_TIME
-  clock_t * chunkTimes = new clock_t[NChunks+1];
-  chunkTimes[0] = clock();
-  printTimeDiff(chunkTimes[0], time1, "Time before SM calculation: ");
+  std::vector<clock_t> chunkTimes;
+  chunkTimes.reserve(size_t(NChunks+1));
+  chunkTimes.push_back(clock());
+  printTimeDiff(*(chunkTimes.end()-1), time1, "Time before SM calculation: ");
 #endif /* MEASURE_TIME */
 
 #if DEBUG
@@ -135,8 +137,8 @@ int main(int argc, char** argv) {
     memcpyD2H<MemArrSizeType>(nnz_host, nnz_devi, 1);
 
 #if MEASURE_TIME
-    chunkTimes[chunkId+1] = clock();
-    printTimeDiff(chunkTimes[chunkId+1], chunkTimes[chunkId], "Time for latest chunk: ");
+    chunkTimes.push_back(clock());
+    printTimeDiff(*(chunkTimes.end()-1), *(chunkTimes.end()-2), "Time for latest chunk: ");
 #endif
 
 #if DEBUG
@@ -150,7 +152,7 @@ int main(int argc, char** argv) {
 
 #if MEASURE_TIME
   clock_t time3 = clock();
-  printTimeDiff(time3, chunkTimes[0], "Time for SM calculation: ");
+  printTimeDiff(time3, *chunkTimes.begin(), "Time for SM calculation: ");
 #endif /* MEASURE_TIME */
 
 #if DEBUG
