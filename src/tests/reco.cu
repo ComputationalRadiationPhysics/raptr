@@ -14,6 +14,7 @@
 #include "csrmv.hpp"
 #include "mlemOperations.hpp"
 #include "RayGenerators.hpp"
+#include "chunkSaving.hpp"
 
 #include <cusparse.h>
 #include <sstream>
@@ -41,7 +42,7 @@ int main(int argc, char** argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   
-  int const nargs(6);
+  int const nargs(8);
   if(argc!=nargs+1) {
     std::cerr << "Error: Wrong number of arguments. Exspected: "
               << nargs << ":" << std::endl
@@ -50,7 +51,9 @@ int main(int argc, char** argv) {
               << "  number of rays" << std::endl
               << "  filename of sensitivity" << std::endl
               << "  number reco iterations" << std::endl
-              << "  filename of density guess" << std::endl;
+              << "  filename of density guess" << std::endl
+              << "  save sm to CPU?" << std::endl
+              << "  keep sm on GPU? (keeping overwrites saving)" << std::endl;
     exit(EXIT_FAILURE);
   }
   std::string const fn(argv[1]);
@@ -58,7 +61,21 @@ int main(int argc, char** argv) {
   std::string const sfn(argv[4]);
   int const nIt(atoi(argv[5]));
   std::string const xfn(argv[6]);
+  bool saveArg(atoi(argv[7]));
+  bool keepArg(atoi(argv[8]));
   
+  if(mpi_rank == 0) {
+    std::cout << "[" << mpi_rank << "]: "
+              << "Measurement file: " << fn << std::endl
+              << "Sensitivity file: " << sfn << std::endl
+              << "Initial density file: " << xfn << std::endl
+              << "Output file: " << on << std::endl
+              << "Number of rays: " << atoi(argv[3]) << std::endl
+              << "Number of iterations: " << nIt << std::endl
+              << "Save system matrix to CPU mem? (1-yes, 0-no): " << saveArg << std::endl
+              << "Keep system matrix in GPU mem? (1-yes, 0-no): " << keepArg << std::endl;
+  }
+          
   /* NUMBER OF RAYS PER CHANNEL */
   int const nrays(atoi(argv[3]));
   HANDLE_ERROR(cudaMemcpyToSymbol(nrays_const, &nrays, sizeof(int)));
@@ -119,10 +136,14 @@ int main(int argc, char** argv) {
   
   std::vector<val_t> x_host;
   if(xfile_good) {
-    std::cout << "Will use density from file " << xfn << std::endl;
+    if(mpi_rank == 0) {
+      std::cout << "Will use density from file " << xfn << std::endl;
+    }
     x_host = readHDF5_Density<val_t>(xfn);
   } else {
-    std::cout << "No valid density input file given. Will use homogenous density." << std::endl;
+    if(mpi_rank == 0) {
+      std::cout << "No valid density input file given. Will use homogenous density." << std::endl;
+    }
     x_host = std::vector<val_t>(VGRIDSIZE, 1.);
   }
   
@@ -150,8 +171,8 @@ int main(int argc, char** argv) {
   std::vector<val_t> s_host;
   int read_is_good(1);
   int sSize;
-  std::cout << "Read from file " << sfn << std::endl;
   if(mpi_rank == 0) {
+    std::cout << "Read from file " << sfn << std::endl;
     s_host = readHDF5_Density<val_t>(sfn);
     if(s_host.size() == VGRIDSIZE) {
       read_is_good = 0;
@@ -165,8 +186,10 @@ int main(int argc, char** argv) {
   MPI_Bcast(&read_is_good, 1, MPI_INT, 0, MPI_COMM_WORLD);
   if(read_is_good != 0) {
     MPI_Finalize();
-    std::cerr << "Error: Something about the sensitivity file (size?) is wrong"
-              << std::endl;
+    if(mpi_rank == 0) {
+      std::cerr << "Error: Something about the sensitivity file (size?) is wrong"
+                << std::endl;
+    }
     exit(EXIT_FAILURE);
   }
   MPI_Bcast(&sSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -204,6 +227,18 @@ int main(int argc, char** argv) {
 
   /* How many chunks are needed? */
   ChunkGridSizeType NChunks(nChunks<ChunkGridSizeType, MemArrSizeType>(maxNnz, MemArrSizeType(LIMM*VGRIDSIZE)));
+  if(mpi_rank == 0) {
+    std::cout << "[0]: NChunks = " << NChunks << std::endl
+              << "-----" << std::endl
+              << "-----" << std::endl;
+  }
+  
+  /* Create chunk storage */
+  ChunkStorage storage;
+  
+  MemArrSizeType nnz_host[1] = {0};
+  bool smAvailable(false);
+  bool smLoadable(false);
   
   /* RECO ITERATIONS */
   for(int it=0; it<nIt; it++) {
@@ -213,25 +248,77 @@ int main(int argc, char** argv) {
     memcpyH2D<val_t>(c_devi, &c_host[0], VGRIDSIZE);
     
     /* CHUNKWISE */
-    ChunkGridSizeType chunkId = ChunkGridSizeType(mpi_rank);
-    while(chunkId < NChunks) {
+    if(smLoadable)
+    {
+      storage.initLoadingChunks();
+    }
+    for(ChunkGridSizeType chunkId =  mpi_rank;
+                          chunkId <  NChunks;
+                          chunkId += mpi_size) {
+                          
       ListSizeType m   = nInChunk(chunkId, effM, LIMM);
       ListSizeType ptr = chunkPtr(chunkId, LIMM);
-
-      MemArrSizeType nnz_host[1] = {0};
-      memcpyH2DAsync<MemArrSizeType>(nnz_devi, nnz_host, 1);
-
-      /* Get system matrix */
-      systemMatrixCalculation<val_t, ListSizeType, int, MemArrSizeType,
-              RandRayGen<val_t, Trafo0_inplace, Trafo1_inplace> > (
-            aEcsrCnlPtr_devi, aVxlId_devi, aVal_devi,
-            nnz_devi,
-            aCnlId_devi, aCsrCnlPtr_devi,
-            &(yRowId_devi[ptr]), &m,
-            handle);
-      HANDLE_ERROR(cudaDeviceSynchronize());
-      memcpyD2H<MemArrSizeType>(nnz_host, nnz_devi, 1);
-
+      
+      if(mpi_rank==0) {
+        std::cout << "[0]: " << "Chunk " << chunkId << std::endl;
+      }
+      
+      if(!smAvailable)
+      {
+        if(mpi_rank==0) {
+          std::cout << "[0]: " << "smAvailable: false" << std::endl;
+        }
+        if(!smLoadable)
+        {
+          if(mpi_rank==0) {
+            std::cout << "[0]: " << "smLoadable: false" << std::endl;
+          }
+          /* Calculate system matrix */
+          if(mpi_rank==0) {
+            std::cout << "[0]: " << "calculate system matrix ..." << std::endl;
+          }
+          nnz_host[0] = 0;
+          memcpyH2D<MemArrSizeType>(nnz_devi, nnz_host, 1);
+          systemMatrixCalculation<val_t, ListSizeType, int, MemArrSizeType,
+                  RandRayGen<val_t, Trafo0_inplace, Trafo1_inplace> > (
+                aEcsrCnlPtr_devi, aVxlId_devi, aVal_devi,
+                nnz_devi,
+                aCnlId_devi, aCsrCnlPtr_devi,
+                &(yRowId_devi[ptr]), &m,
+                handle);
+          HANDLE_ERROR(cudaDeviceSynchronize());
+          memcpyD2H<MemArrSizeType>(nnz_host, nnz_devi, 1);
+          if(mpi_rank==0) {
+            std::cout << "[0]: " << "calculated " << nnz_host[0] << " elements." << std::endl;
+          }
+          
+          if(!keepArg)
+          {
+            if(saveArg)
+            {
+              if(mpi_rank==0) {
+                std::cout << "[0]: save system matrix ..." << std::endl;
+              }
+              /* Save system matrix */
+              storage.saveChunk(nnz_host[0], int(m), aVal_devi, aVxlId_devi, aEcsrCnlPtr_devi);
+            } /* if(saveArg) */
+          } /* if(!keepArg) */
+        } /* if(!smLoadable) */
+        else
+        {
+          if(mpi_rank==0) {
+            std::cout << "[0]: smLoadable: true" << std::endl
+                      << "[0]: load system matrix ..." << std::endl;
+          }
+          /* Load system matrix */
+          storage.loadChunk(nnz_host[0], int(m), aVal_devi, aVxlId_devi, aEcsrCnlPtr_devi);
+          memcpyH2D<MemArrSizeType>(nnz_devi, nnz_host, 1); 
+          if(mpi_rank==0) {
+            std::cout << "[0]: " << "loaded " << nnz_host[0] << " elements." << std::endl;
+          }
+        } /* if(!smLoadable) else */
+      } /* if(!smAvailable) */
+      
       /* Simulate measurement */
       CSRmv<val_t>()(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
             m, VGRIDSIZE, *nnz_host, &one, A, aVal_devi, aEcsrCnlPtr_devi, aVxlId_devi,
@@ -249,11 +336,25 @@ int main(int argc, char** argv) {
             eVal_devi, &one, c_devi);
       HANDLE_ERROR(cudaDeviceSynchronize());
       
-      /* Go for next chunk */
-      chunkId += mpi_size;
-    
-    } /* while(chunkId < NChunks) */
-    
+      
+      if(mpi_rank==0) {
+        std::cout << "-----" << std::endl;
+      }
+    }  /* for(ChunkGridSizeType chunkId =  mpi_rank;
+        *                       chunkId <  NChunks;
+       *                       chunkId += mpi_size) */
+    if(!smAvailable && keepArg)
+    {
+      smAvailable = true;
+    }
+    else
+    {
+      if(!smLoadable && saveArg)
+      {
+        smLoadable = true;
+      }
+    }
+       
     /* Reduce correction between processes */
     memcpyD2H(&c_host[0], c_devi, VGRIDSIZE);
     MPI_Allreduce(&c_host[0], &cMpi[0], VGRIDSIZE, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
@@ -279,8 +380,13 @@ int main(int argc, char** argv) {
     /* Normalize */
     val_t norm = sum<val_t>(x_devi, VGRIDSIZE);
     scales<val_t>(x_devi, val_t(1./norm), VGRIDSIZE);
-    std::cout << "Norm: " << sum<val_t>(x_devi, VGRIDSIZE) << std::endl << std::flush;
-  
+    /* Print stuff */
+    if(mpi_rank == 0) {
+      
+      std::cout << "Norm: " << sum<val_t>(x_devi, VGRIDSIZE) << std::endl << std::flush;
+    
+    } /* if(mpi_rank == 0) */
+      
     /* Write to file */
     if(mpi_rank==0) {
       
