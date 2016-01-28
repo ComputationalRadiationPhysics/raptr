@@ -1,9 +1,7 @@
-/** @file typedefs_array_sizes.hpp */
-/* Author: malte
- *
- * Created on 26. November 2015, 11:57
+/** @file typedefs_array_sizes.hpp
+ * 
+ *  @brief Typedefs for array size types.
  */
-
 #ifndef TYPEDEFS_ARRAY_SIZES_HPP
 #define TYPEDEFS_ARRAY_SIZES_HPP
 

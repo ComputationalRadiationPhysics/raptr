@@ -1,7 +1,8 @@
 /** @file voxelgrid_defines.h
- * Author: malte
  *
- * Created on 21. April 2015, 14:02 */
+ *  @brief Header file that defines the voxel grid on which to reconstruct the
+ *  activity distribution.
+ */
 
 #ifndef VOXELGRID_DEFINES_H
 #define	VOXELGRID_DEFINES_H

@@ -1,13 +1,7 @@
-/**
- * @file typedefs.hpp
- * @brief Header file that globally defines types for easy use in main.
+/** @file typedefs.hpp
+ * 
+ *  @brief Header file that globally defines types for easy use in main.
  */
-/* 
- * Author: malte
- *
- * Created on 24. Oktober 2014, 11:41
- */
-
 #ifndef TYPEDEFS_HPP
 #define TYPEDEFS_HPP
 

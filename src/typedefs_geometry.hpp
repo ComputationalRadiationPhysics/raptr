@@ -1,9 +1,8 @@
-/** @file typedefs_geometry.hpp */
-/* Author: malte
- *
- * Created on 26. November 2015, 11:52
+/** @file typedefs_geometry.hpp
+ * 
+ *  @brief Typedefs for geometry related types such as VoxelGrid,
+ *  MeasurementSetup and their respective index functors.
  */
-
 #ifndef TYPEDEFS_GEOMETRY_HPP
 #define TYPEDEFS_GEOMETRY_HPP
 

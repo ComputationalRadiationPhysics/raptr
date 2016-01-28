@@ -1,9 +1,9 @@
-/** @file MeasurementSetupLinIndex.hpp */
-/* 
- * File:   MeasurementSetupLinIndex.hpp
- * Author: malte
- *
- * Created on 12. Oktober 2014, 16:01
+/** @file MeasurementSetupLinIndex.hpp
+ * 
+ *  @brief Header file that defines the measurement setup index functor
+ *  templates and specialisations to use.
+ *  Specialisations define the mapping from multi-dim measurement indices to a
+ *  1-dim measurement index and its inverse.
  */
 
 /*

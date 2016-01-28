@@ -1,11 +1,8 @@
-/** 
- * @file convertCsr2Ecsr.hpp
+/** @file convertCsr2Ecsr.hpp
+ * 
+ *  @brief Header file that defines function for conversion betwenn sparse
+ *  matrix formats.
  */
-/* Author: malte
- *
- * Created on 6. Februar 2015, 15:34
- */
-
 #ifndef CONVERTCSR2ECSR_HPP
 #define	CONVERTCSR2ECSR_HPP
 

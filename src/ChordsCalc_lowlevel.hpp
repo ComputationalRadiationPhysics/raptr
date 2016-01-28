@@ -1,7 +1,6 @@
-/**
- * @file ChordsCalc_lowlevel.hpp
- * @brief Header file that defines lowlevel functionality for calculations that
- * include a grid and a ray.
+/** @file ChordsCalc_lowlevel.hpp
+ * 
+ *  @brief Header file that defines basic calculations with a grid and a ray.
  */
 
 /* TODO Behavior for rays that lie exactly in a plane? Exactly on the

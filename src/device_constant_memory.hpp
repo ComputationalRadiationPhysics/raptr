@@ -1,6 +1,6 @@
-/**
- * @file device_constant_memory.hpp
- * @brief Header file that defines objects in device constant memory.
+/** @file device_constant_memory.hpp
+ * 
+ *  @brief Header file that defines objects in device constant memory.
  */
 #ifndef DEVICE_CONSTANT_MEMORY_H
 #define DEVICE_CONSTANT_MEMORY_H

@@ -1,11 +1,8 @@
-/** @file MeasurementList.hpp */
-/* 
- * File:   MeasurementList.hpp
- * Author: malte
- *
- * Created on 18. Oktober 2014, 22:18
+/** @file MeasurementList.hpp
+ * 
+ *  @brief Header file that defines the MeasurementList template as a sparse
+ *  vector format for keeping measurement data and a specialisation to use.
  */
-
 #ifndef MEASUREMENTLIST_HPP
 #define	MEASUREMENTLIST_HPP
 

@@ -1,4 +1,8 @@
-/** @file VoxelGrid.hpp */
+/** @file VoxelGrid.hpp
+ * 
+ *  @brief Header file that defines the VoxelGrid template and a specialisation
+ *  to use.
+ */
 
 #ifndef VOXELGRID_HPP
 #define VOXELGRID_HPP

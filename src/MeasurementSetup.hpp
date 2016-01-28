@@ -1,4 +1,8 @@
-/** @file MeasurementSetup.hpp */
+/** @file MeasurementSetup.hpp
+ * 
+ *  @brief Header file that defines the MeasurementSetup template and a
+ *  specialisation to use.
+ */
 #ifndef MEASEREMENTSETUP_HPP
 #define MEASEREMENTSETUP_HPP
 
@@ -7,13 +11,13 @@ class MeasurementSetup
 {
   public:
     
-    // x posision of 1st detector
+    // x position of 1st detector
     __host__ __device__ T   pos0x() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->pos0x();
     }
 
-    // x posision of 2nd detector
+    // x position of 2nd detector
     __host__ __device__ T   pos1x() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->pos1x();

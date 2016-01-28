@@ -1,11 +1,7 @@
-/** 
- * @file CUSPARSE_HandleError.hpp
+/** @file CUSPARSE_HandleError.hpp
+ * 
+ *  @brief Auxiliary macro for printing CUSPARSE error messages.
  */
-/* Author: malte
- *
- * Created on 3. Februar 2015, 14:39
- */
-
 #ifndef CUSPARSE_HANDLEERROR_HPP
 #define	CUSPARSE_HANDLEERROR_HPP
 

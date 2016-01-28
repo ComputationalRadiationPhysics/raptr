@@ -1,7 +1,8 @@
 /** @file RayGenerators.hpp
- * Author: malte
- *
- * Created on 12. Juni 2015, 14:33 */
+ *  
+ *  @brief Header file that defines ray generators. A specific ray generator
+ *  implements a certain way of generating rays.
+ */
 
 #ifndef RAYGENERATORS_HPP
 #define	RAYGENERATORS_HPP

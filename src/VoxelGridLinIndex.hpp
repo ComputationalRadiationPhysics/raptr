@@ -1,9 +1,9 @@
-/** @file VoxelGridLinIndex.hpp */
-/* 
- * File:   VoxelGridLinIndex.hpp
- * Author: malte
- *
- * Created on 22. Oktober 2014, 13:15
+/** @file VoxelGridLinIndex.hpp
+ * 
+ *  @brief Header file that defines the voxel grid index functor templates and
+ *  specialisations to use.
+ *  Specialisations define the mapping from multi-dim grid indices to a 1-dim
+ *  grid index and its inverse.
  */
 
 #ifndef VOXELGRIDLININDEX_HPP

@@ -1,11 +1,8 @@
-/** 
- * @file cooSort.hpp
+/** @file cooSort.hpp
+ * 
+ *  @brief Header file that defines function for sorting matrices of format
+ *  coordinate list to row major column minor ordering.
  */
-/* Author: malte
- *
- * Created on 30. Januar 2015, 15:48
- */
-
 #ifndef COOSORT_HPP
 #define	COOSORT_HPP
 

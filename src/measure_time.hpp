@@ -1,8 +1,7 @@
 /** @file measure_time.hpp
- * Author: malte
- *
- * Created on 8. April 2015, 11:39 */
-
+ * 
+ *  @brief Rudimentary time taking and printing to stdout.
+ */
 #ifndef MEASURE_TIME_HPP
 #define	MEASURE_TIME_HPP
 

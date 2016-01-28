@@ -1,8 +1,7 @@
-/** @file wrappers.hpp */
-/* Author: malte
- *
- * Created on 13. Februar 2015, 12:47 */
-
+/** @file wrappers.hpp
+ * 
+ *  @brief Header file that defines wrapper functions.
+ */
 #ifndef WRAPPERS_HPP
 #define	WRAPPERS_HPP
 

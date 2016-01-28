@@ -1,7 +1,8 @@
-/** @file reco.cu */
-/* Author: malte
- *
- * Created on 6. Februar 2015, 17:09 */
+/** @file reco.cu
+ * 
+ *  @brief Main file that implements the reconstruction by the iterative MLEM
+ *  algorithm.
+ */
 
 #define NBLOCKS 32
 

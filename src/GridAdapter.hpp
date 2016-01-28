@@ -1,8 +1,8 @@
-/** @file GridAdapter.hpp */
-/*
- * Author: malte
- *
- * Created on 28. Januar 2015, 13:57
+/** @file GridAdapter.hpp
+ * 
+ *  @brief Header file that defines GridAdapter. GridAdapter takes a VoxelGrid
+ *  and supplies the interface to make activity data on that VoxelGrid writable
+ *  by H5DensityWriter.
  */
 
 #ifndef GRIDADAPTER_HPP

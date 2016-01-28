@@ -1,12 +1,8 @@
-/** 
- * @file csrmv.hpp
+/** @file csrmv.hpp
+ * 
+ *  @brief Header file that defines functor for matrix-vector multiplication
+ *  with csr matrices.
  */
-/*
- * Author: malte
- *
- * Created on 30. Januar 2015, 15:34
- */
-
 #ifndef CSRMV_HPP
 #define	CSRMV_HPP
 

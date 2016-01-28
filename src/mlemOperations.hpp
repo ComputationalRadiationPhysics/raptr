@@ -1,8 +1,9 @@
-/** @file mlemOperations.hpp */
-/* Author: malte
- *
- * Created on 6. Februar 2015, 14:12 */
-
+/** @file mlemOperations.hpp
+ * 
+ *  @brief Defines the functions that are applied to the system matrix, the
+ *  measurement vector and the previous guess of the activity distribution to
+ *  calculate the new guess.
+ */
 #ifndef MLEMOPERATIONS_HPP
 #define	MLEMOPERATIONS_HPP
 

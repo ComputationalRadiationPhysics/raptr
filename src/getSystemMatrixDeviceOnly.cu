@@ -1,4 +1,9 @@
-/** @file getSystemMatrixDeviceOnly.cu */
+/** @file getSystemMatrixDeviceOnly.cu
+ * 
+ *  @brief Header file that defines the cuda kernel function that, given a
+ *  measurement vector, calculates the system matrix for that measurement
+ *  vector.
+ */
 #ifndef GETSYSTEMMATRIXDEVICEONLY_CU
 #define GETSYSTEMMATRIXDEVICEONLY_CU
 

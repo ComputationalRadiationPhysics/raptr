@@ -1,4 +1,8 @@
-/** @file H5Reader.hpp */
+/** @file H5Reader.hpp
+ *
+ *  @brief Header file that defines class H5Reader that reads raw data from
+ *  HDF5 measurement files.
+ */
 #ifndef H5READER_HPP
 #define H5READER_HPP
 
