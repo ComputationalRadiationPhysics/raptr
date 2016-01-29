@@ -347,7 +347,7 @@ getChords(
 #endif
     }
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
-    std::cout << "////////////////////"
+    std::cout << "/==================/"
               << std::endl << std::endl;
 #endif
     
