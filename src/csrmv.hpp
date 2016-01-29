@@ -8,8 +8,36 @@
 
 #include <cusparse.h>
 
+/**
+ * @brief Functor: y = a*op(A)*x + b*y
+ * 
+ * @tparam T Type of array elements, vector x elements, vector y elements,
+ * scalar alpha and scalar beta
+ */
 template<typename T>
 struct CSRmv {
+  /**
+   * @brief Functor operation
+   *
+   * @param handle Handle to the cuSPARSE context.
+   * @param transA Operation type. Indicates, if matrix is to be used as
+   * non-transposed, transposed or conjugated transposed.
+   * @param m Number of rows of matrix A.
+   * @param n Number of columns of matrix A.
+   * @param nnz Number of non-zero elements of matrix A.
+   * @param alpha Scalar factor for multiplication.
+   * @param descrA Descriptor of matrix A.
+   * @param csrValA Array of nnz non-zero elements of matrix A.
+   * @param csrRowPtrA Integer array of m+1 elements that contains the start
+   * of every row and the end of the last row plus one.
+   * @param csrColIdA Integer array of nnz ( = csrRowPtrA(m) - csrRowPtrA(0) )
+   * column indices of the nonzero elements of matrix A.
+   * @param x Vector of n elements, if non-transposed and m elements if
+   * transposed or conjugated transposed.
+   * @param beta Scalar factor for multiplication.
+   * @param y Vector of m elements, if non-transposed and n elements if
+   * transposed or conjugated transposed.
+   */
   void operator()(
         cusparseHandle_t handle, cusparseOperation_t transA,
         int m, int n, int nnz, T * const alpha,
@@ -18,6 +46,9 @@ struct CSRmv {
         T * const x, T * const beta, T * const y);
 };
 
+/**
+ * @brief Template specialization.
+ */
 template<>
 struct CSRmv<float> {
   void operator()(
@@ -31,6 +62,9 @@ struct CSRmv<float> {
   }
 };
 
+/**
+ * @brief Template specialization.
+ */
 template<>
 struct CSRmv<double> {
   void operator()(
@@ -44,6 +78,9 @@ struct CSRmv<double> {
   }
 };
 
+/**
+ * @brief Template specialization.
+ */
 template<>
 struct CSRmv<cuComplex> {
   void operator()(
@@ -58,6 +95,9 @@ struct CSRmv<cuComplex> {
   }
 };
 
+/**
+ * @brief Template specialization.
+ */
 template<>
 struct CSRmv<cuDoubleComplex> {
   void operator()(

@@ -1,6 +1,6 @@
 /** @file typedefs.hpp
  * 
- *  @brief Header file that globally defines types for easy use in main.
+ *  @brief Header file that globally defines types.
  */
 #ifndef TYPEDEFS_HPP
 #define TYPEDEFS_HPP

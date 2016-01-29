@@ -1,6 +1,6 @@
 /** @file typedefs_geometry.hpp
  * 
- *  @brief Typedefs for geometry related types such as VoxelGrid,
+ *  @brief Header file: Typedefs for geometry related types such as VoxelGrid,
  *  MeasurementSetup and their respective index functors.
  */
 #ifndef TYPEDEFS_GEOMETRY_HPP
@@ -23,19 +23,22 @@ typedef DefaultVoxelGrid<val_t>            VG;
 
 /**
  * @var typedef DefaultVoxelGridIdx<VG> Idx
- * @brief Type definition for functor 'voxel index in x direction'.
+ * @brief Type definition for functor 'linearized voxel index -> voxel index in
+ * x direction'.
  */
 typedef DefaultVoxelGridIdx<VG>            Idx;
 
 /**
  * @var typedef DefaultVoxelGridIdy<VG> Idy
- * @brief Type definition for functor 'voxel index in y direction'.
+ * @brief Type definition for functor 'linearized voxel index -> voxel index in
+ * y direction'.
  */
 typedef DefaultVoxelGridIdy<VG>            Idy;
 
 /**
  * @var typedef  DefaultVoxelGridIdz<VG> Idz
- * @brief Type definition for functor 'voxel index in z direction'.
+ * @brief Type definition for functor 'linearized voxel index -> voxel index in
+ * z direction'.
  */
 typedef DefaultVoxelGridIdz<VG>            Idz;
 
@@ -47,35 +50,40 @@ typedef DefaultMeasurementSetup<val_t>     MS;
 
 /**
  * @var typedef DefaultMeasurementSetupId0z<MS> Id0z
- * @brief Type definition for functor 'index in z direction of pixel on first
+ * @brief Type definition for functor 'linearized channel index -> index in z
+ * direction of pixel on first
  * detector'.
  */
 typedef DefaultMeasurementSetupId0z<MS>    Id0z;
 
 /**
  * @var typedef DefaultMeasurementSetupId0y<MS> Id0y
- * @brief Type definition for functor 'index in y direction of pixel on first
+ * @brief Type definition for functor 'linearized channel index -> index in y
+ * direction of pixel on first
  * detector'.
  */
 typedef DefaultMeasurementSetupId0y<MS>    Id0y;
 
 /**
  * @var typedef DefaultMeasurementSetupId1z<MS> Id1z
- * @brief Type definition for functor 'index in z direction of pixel on second
+ * @brief Type definition for functor 'linearized channel index -> index in z
+ * direction of pixel on second
  * detector'.
  */
 typedef DefaultMeasurementSetupId1z<MS>    Id1z;
 
 /**
  * @var typedef DefaultMeasurementSetupId1y<MS> Id1y
- * @brief Type definition for functor 'index in y direction of pixel on second
+ * @brief Type definition for functor 'linearized channel index -> index in y
+ * direction of pixel on second
  * detector'.
  */
 typedef DefaultMeasurementSetupId1y<MS>    Id1y;
 
 /**
  * @var typedef DefaultMeasurementSetupIda<MS> Ida
- * @brief Type definition for functor 'angular index'.
+ * @brief Type definition for functor 'linearized channel index -> angular
+ * index'.
  */
 typedef DefaultMeasurementSetupIda<MS>     Ida;
 

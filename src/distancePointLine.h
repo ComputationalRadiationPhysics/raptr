@@ -1,9 +1,7 @@
-/** @file distancePointLine.h */
-/* 
- * File:   distancePointLine.h
- * Author: malte
- *
- * Created on 17. Oktober 2014, 16:44
+/** @file distancePointLine.h
+ * 
+ * @brief Header file that defines a function for calculation the orthogonal
+ * distance of a point from a line.
  */
 
 #ifndef DISTANCEPOINTLINE_H
@@ -12,7 +10,8 @@
 #include <cstdio>
 
 /**
- * Calculate absolute value of of vector.
+ * @brief Calculate absolute value of a 3d vector.
+ * 
  * @param a A 3 component array (= "vector").
  * @return Absolute value (= length) of vector.
  */
@@ -24,7 +23,8 @@ inline T absolute( T const * const a )
 }
 
 /**
- * Calculate the scalar product of two vectors
+ * @brief Calculate the scalar product of two 3d vectors
+ * 
  * @param a A 3 component array (= "vector"). One factor.
  * @param b A 3 component array (= "vector"). One factor.
  * @return Scalar product.
@@ -36,7 +36,9 @@ inline T scalarProduct( T const * const a, T const * const b )
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
-/** @brief Calculate the cross product of two vectors.
+/**
+ * @brief Calculate the cross product of two 3d vectors.
+ * 
  * @param result A 3 component array.
  * @param a A 3 component array (= "vector"). One factor.
  * @param b A 3 component array (= "vector"). One factor. */
@@ -50,7 +52,13 @@ inline void crossProduct( T * const result, T const * const a, T const * const b
 }
 
 /**
- * Calculate the minimum distance between a point and a line.
+ * @brief In 3d calculate the orthogonal distance between a point and a line.
+ * 
+ * The line is defined by two different points on it. In other words: It is
+ * defined by a line segment. Still the result is always the orthogonal distance
+ * in respect to the whole line. Expressly, this can be smaller than the point's
+ * distance from either of the points defining the line segment.
+ * 
  * @param a A 3 component array (= "vector"). Position vector of one point one the line.
  * @param b A 3 component array (= "vector"). Position vector of another point on the line.
  * @param p A 3 component array (= "vector"). Position vector of the point.

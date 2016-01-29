@@ -1,12 +1,19 @@
 /** @file VoxelGrid.hpp
  * 
- *  @brief Header file that defines the VoxelGrid template and a specialisation
- *  to use.
+ *  @brief Header file that defines the VoxelGrid template and a specialization
+ *  that implements the interface.
  */
 
 #ifndef VOXELGRID_HPP
 #define VOXELGRID_HPP
 
+/**
+ * @brief Class template. VoxelGrid objects define the properties of the image
+ * space or grid that the reconstructed image lives in/on.
+ * 
+ * @tparam T Type of values that are lengths.
+ * @tparam ConcreteVoxelGrid Type of a specialization of this template.
+ */
 template<typename T, typename ConcreteVoxelGrid>
 class VoxelGrid
 {
@@ -17,54 +24,81 @@ class VoxelGrid
 //               int const gridN0, int const gridN1, int const gridN2 )
 //    {}
     
+    /**
+     * @return Grid origin x coordinate.
+     */
     __host__ __device__
     T gridox() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->gridox();
     }
 
+    /**
+     * @return Grid origin y coordinate.
+     */
     __host__ __device__
     T gridoy() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->gridoy();
     }
 
+    /**
+     * @return Grid origin z coordinate.
+     */
     __host__ __device__
     T gridoz() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->gridoz();
     }
     
+    /**
+     * @return Voxels' extent in x direction.
+     */
     __host__ __device__
     T griddx() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->griddx();
     }
 
+    /**
+     * @return Voxels' extent in y direction.
+     */
     __host__ __device__
     T griddy() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->griddy();
     }
 
+    /**
+     * @return Voxels' extent in z direction.
+     */
     __host__ __device__
     T griddz() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->griddz();
     }
     
+    /**
+     * @return Number of voxels in x direction.
+     */
     __host__ __device__
     int gridnx() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->gridnx();
     }
 
+    /**
+     * @return Number of voxels in y direction.
+     */
     __host__ __device__
     int gridny() const
     {
         return static_cast<ConcreteVoxelGrid*>(this)->gridny();
     }
 
+    /**
+     * @return Number of voxels in z direction.
+     */
     __host__ __device__
     int gridnz() const
     {
@@ -88,7 +122,12 @@ class VoxelGrid
 };
 
 
-
+/**
+ * @brief Partial template specialization. Implements the interface and
+ * constructors.
+ * 
+ * @tparam T Type of values that are lengths.
+ */
 template<typename T>
 class DefaultVoxelGrid : public VoxelGrid<T, DefaultVoxelGrid<T> >
 {

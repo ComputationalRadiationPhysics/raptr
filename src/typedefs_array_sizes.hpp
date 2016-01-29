@@ -1,6 +1,6 @@
 /** @file typedefs_array_sizes.hpp
  * 
- *  @brief Typedefs for array size types.
+ *  @brief Header file: Typedefs for array size types.
  */
 #ifndef TYPEDEFS_ARRAY_SIZES_HPP
 #define TYPEDEFS_ARRAY_SIZES_HPP

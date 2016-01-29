@@ -1,6 +1,6 @@
 /** @file typedefs_val_type.hpp
  * 
- *  @brief Typedef for general value type.
+ *  @brief Header file: Typedef for general value type.
  */
 #ifndef TYPEDEFS_VAL_TYPE_HPP
 #define TYPEDEFS_VAL_TYPE_HPP

@@ -14,6 +14,7 @@
 
 /**
  * @brief Divide two arrays elementwise.
+ * 
  * @tparam T Type of array elements.
  * @param result Array of resulting quotient of length n.
  * @param dividend Array of dividends of length n.
@@ -34,16 +35,18 @@ void divides(
 
 /**
  * @brief Functor: (a, b, c) -> result : result = a * b / c
+ * 
  * @tparam T Type of argument tuple elements and result.
  */
 template<typename T>
 struct dividesMultiplies_F : public thrust::unary_function<thrust::tuple<T, T, T>, T> {
-  __host__ __device__
   /**
    * @brief Functor operation.
+   * 
    * @param t Argument tuple. Elements: a, b, c.
    * @return a * b / c.
    */
+  __host__ __device__
   T operator()(
         thrust::tuple<T, T, T> const & t) const {
     T dvs(thrust::get<2>(t));
@@ -54,6 +57,7 @@ struct dividesMultiplies_F : public thrust::unary_function<thrust::tuple<T, T, T
 
 /**
  * @brief Perform elementwise: result = a * b / c.
+ * 
  * @tparam T Type of array elements.
  * @param result Array of results of length n.
  * @param a Array of first factors of length n.
@@ -81,24 +85,27 @@ void dividesMultiplies(
 
 /**
  * @brief Functor: t -> result : result = t * alpha.
+ * 
  * @tparam T Type of argument and result.
  */
 template<typename T>
 struct scales_F : public thrust::unary_function<T, T> {
   
-/**
- * @brief Ctor.
- * @param alpha_ Factor to multiply arguments with.
- */
+  /**
+   * @brief Ctor.
+   * 
+   * @param alpha_ Factor to multiply arguments with.
+   */
   __host__ __device__
   scales_F<T>(T const alpha_)
   : alpha(alpha_) {}
 
-/**
- * @brief Functor operation.
- * @param t Argument.
- * @return Result.
- */
+  /**
+   * @brief Functor operation.
+   * 
+   * @param t Argument.
+   * @return Result.
+   */
   __host__ __device__
   T operator()(T const & t) const {
     return alpha * t;
@@ -110,6 +117,7 @@ private:
 
 /**
  * @brief Perform elementwise: x = x * alpha.
+ * 
  * @tparam T Type of array elements.
  * @param x Array of length n.
  * @param alpha Scaling factor.
@@ -126,6 +134,7 @@ void scales(
 
 /**
  * @brief Sum of array.
+ * 
  * @tparam T Type of array elements.
  * @param x Array of summands of length n.
  * @param n Length of array.
