@@ -1,4 +1,7 @@
-/** @file FileTalk.hpp */
+/** @file FileTalk.hpp
+ * 
+ *  @brief Auxiliary macro for printing code lines to stdout.
+ */
 #include <iostream>
 #include <fstream>
 #include <string>

@@ -1,9 +1,10 @@
-/** @file MeasurementSetupTrafo2CartCoord.hpp */
-/* 
- * File:   MeasurementSetupTrafo2PixelVol.hpp
- * Author: malte
- *
- * Created on 14. Oktober 2014, 18:23
+/** @file MeasurementSetupTrafo2CartCoord.hpp
+ * 
+ *  @brief Header file that defines the MeasurementSetupTrafo2CartCoord...
+ *  templates for pixels on the 1st detector and for pixels on the 2nd detector
+ *  and specialisations to use.
+ *  Specialisations are trafos that are used to get the global coordinates of
+ *  a point in the volume of a given detector pixel.
  */
 
 /*

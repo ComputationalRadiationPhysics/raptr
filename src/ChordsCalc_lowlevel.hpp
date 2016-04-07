@@ -1,7 +1,6 @@
-/**
- * @file ChordsCalc_lowlevel.hpp
- * @brief Header file that defines lowlevel functionality for calculations that
- * include a grid and a ray.
+/** @file ChordsCalc_lowlevel.hpp
+ * 
+ *  @brief Header file that defines basic calculations with a grid and a ray.
  */
 
 /* TODO Behavior for rays that lie exactly in a plane? Exactly on the
@@ -157,9 +156,11 @@ struct MaxFunctor<2>
 
 
 /**
- * @brief Get chords.
+ * @brief Calculate intersection lengths of a ray with a grid.
  * 
- * Details.
+ * Intersection lengths are calculated for all voxels that are intersected by
+ * the ray. The intersection of one voxel with the ray is called a 'chord'.
+ * This function is an implementation of a variant of Siddon's algorithm.
  * 
  * @tparam val_t    Value type.
  * @param chords    Result memory.
@@ -197,7 +198,8 @@ getChords(
             << std::endl;
 #endif
   
-  // Get parameter of the entry and exit points
+  // Get ray parameters of the ray's entry into the grid and of its exit from
+  // the grid
   val_t aMin;
   val_t aMax;
   bool  aMinGood;
@@ -217,7 +219,7 @@ getChords(
   // - otherwise return
   if(aMin>aMax || !aMinGood || !aMaxGood) return;
   
-  // Get parameter update values 
+  // Get parameter update values for all three dimensions
   val_t aDimup[3];
   getAlphaDimup(  aDimup, ray, gridD);
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
@@ -227,7 +229,7 @@ getChords(
             << std::endl;
 #endif
   
-  // Get id update values
+  // Get id update values for all three dimensions
   int idDimup[3];
   getIdDimup( idDimup, ray);
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
@@ -237,7 +239,8 @@ getChords(
             << std::endl;
 #endif
   
-  // Initialize array of next parameters
+  // Initialize array of parameters that define the next grid plane
+  // intersections in direction of ray for all three dimensions
   val_t aDimnext[3];
   for(int dim=0; dim<3; dim++) aDimnext[dim] = aDimmin[dim] + aDimup[dim];
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
@@ -272,7 +275,7 @@ getChords(
             << std::endl;
 #endif
 
-  // Get length of ray
+  // Get total length of ray
   val_t const length(getLength(ray));
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
   std::cout << "length: " << length
@@ -291,7 +294,7 @@ getChords(
   int chordId = 0;
   while(aCurr < aMax)
   {
-    // Get parameter of next intersection
+    // Get parameter of next grid plane intersection in ray direction
     MinFunctor<3>()(&aNext, &aNextExists, aDimnext, crosses);
     
     bool anyAxisCrossed = false; 
@@ -348,11 +351,10 @@ getChords(
 #endif
     }
 #if ((defined DEBUG || defined CHORDSCALC_DEBUG) && (NO_CHORDSCALC_DEBUG==0))
-    std::cout << "////////////////////"
+    std::cout << "/==================/"
               << std::endl << std::endl;
 #endif
     
-//    if(!anyAxisCrossed) throw -1;
   }
 }
 

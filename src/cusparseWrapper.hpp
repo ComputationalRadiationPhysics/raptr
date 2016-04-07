@@ -1,12 +1,7 @@
-/**
- * @file cusparseWrapper.hpp
+/** @file cusparseWrapper.hpp
+ * 
+ *  @brief Header file that defines cusparse wrapper functions.
  */
-/*
- * Author: malte
- *
- * Created on 3. Februar 2015, 13:50
- */
-
 #ifndef CUSPARSEWRAPPER_HPP
 #define	CUSPARSEWRAPPER_HPP
 

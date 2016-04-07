@@ -1,4 +1,8 @@
-/** @file real_measurementsetup_defines.h */
+/** @file real_measurementsetup_defines.h
+ * 
+ *  @brief Header file that defines the setup of the measurement that led to
+ *  the data which is to be reconstructed.
+ */
 #ifndef MEASUREMENTSETUP_DEFINES
 #define MEASUREMENTSETUP_DEFINES
 

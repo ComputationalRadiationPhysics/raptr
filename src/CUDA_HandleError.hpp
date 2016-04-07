@@ -1,5 +1,7 @@
-/** @file CUDA_HandleError.hpp */
-
+/** @file CUDA_HandleError.hpp
+ * 
+ *  @brief Auxiliary macro for printing CUDA error messages.
+ */
 #ifndef CUDA_HANDLE_ERROR
 #define CUDA_HANDLE_ERROR
 

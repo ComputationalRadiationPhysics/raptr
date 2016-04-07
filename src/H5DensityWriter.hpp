@@ -1,4 +1,8 @@
-/** @file H5DensityWriter.hpp */
+/** @file H5DensityWriter.hpp
+ * 
+ *  @brief Header file that defines class H5DensityWriter that writes density
+ *  data on a Writable grid to HDF5 files.
+ */
 
 #ifndef H5DENSITYWRITER_HPP
 #define H5DENSITYWRITER_HPP

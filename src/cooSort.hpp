@@ -1,11 +1,8 @@
-/** 
- * @file cooSort.hpp
+/** @file cooSort.hpp
+ * 
+ *  @brief Header file that defines function for sorting matrices of format
+ *  coordinate list to row major column minor ordering.
  */
-/* Author: malte
- *
- * Created on 30. Januar 2015, 15:48
- */
-
 #ifndef COOSORT_HPP
 #define	COOSORT_HPP
 
@@ -32,11 +29,11 @@ struct cooIdLess : public thrust::binary_function<cooId_t, cooId_t, bool> {
    * @return Truth value of "lhs comes before rhs".
    */
   bool operator()(cooId_t const & lhs, cooId_t const rhs) const {
-    // First elements are compared
+    /* First elements are compared */
     if(thrust::get<0>(lhs) < thrust::get<0>(rhs))
       return true;
     else if(thrust::get<0>(lhs) == thrust::get<0>(rhs))
-      // If first elements equal, second elements are compared
+      /* If first elements equal, second elements are compared */
       if(thrust::get<1>(lhs) < thrust::get<1>(rhs))
         return true;
     return false;
@@ -57,12 +54,12 @@ void cooSort(
       int * const cooRowId,
       int * const cooColId,
       int const N) {
-  // Wrap raw pointers (to make accessible by thrust algorithms)
+  /* Wrap raw pointers (to make accessible by thrust algorithms) */
   thrust::device_ptr<T>   val = thrust::device_pointer_cast(cooVal);
   thrust::device_ptr<int> row = thrust::device_pointer_cast(cooRowId);
   thrust::device_ptr<int> col = thrust::device_pointer_cast(cooColId);
   
-  // Sort arrays by key (row, col) according to cooIdLess
+  /* Sort arrays by key (row, col) according to cooIdLess */
   thrust::sort_by_key(
         thrust::make_zip_iterator(thrust::make_tuple(row,   col)),
         thrust::make_zip_iterator(thrust::make_tuple(row+N, col+N)),

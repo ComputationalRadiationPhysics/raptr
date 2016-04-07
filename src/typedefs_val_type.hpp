@@ -1,9 +1,7 @@
-/** @file typedefs_val_type.hpp */
-/* Author: malte
- *
- * Created on 26. November 2015, 11:55
+/** @file typedefs_val_type.hpp
+ * 
+ *  @brief Header file: Typedef for general value type.
  */
-
 #ifndef TYPEDEFS_VAL_TYPE_HPP
 #define TYPEDEFS_VAL_TYPE_HPP
 

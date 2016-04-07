@@ -1,8 +1,7 @@
 /** @file cuda_wrappers.hpp
- *  @author malte
- *
- * Created on 4. Mai 2015, 13:45 */
-
+ * 
+ *  @brief Header file that defines cuda wrapper functions.
+ */
 #ifndef CUDA_WRAPPERS_HPP
 #define	CUDA_WRAPPERS_HPP
 

@@ -1,73 +1,106 @@
-/** @file MeasurementSetup.hpp */
+/** @file MeasurementSetup.hpp
+ * 
+ *  @brief Header file that defines the MeasurementSetup template and a
+ *  specialization for the ePET measurements.
+ */
 #ifndef MEASEREMENTSETUP_HPP
 #define MEASEREMENTSETUP_HPP
 
+/**
+ * @brief Class template. MeasurementSetup objects define the properties of the
+ * experimental detector setup.
+ * 
+ * @tparam T Type of geometrical setup values.
+ * @tparam ConcreteMeasurementSetup Type of a specialization of this template.
+ */
 template<typename T, typename ConcreteMeasurementSetup>
 class MeasurementSetup
 {
   public:
     
-    // x posision of 1st detector
+    /**
+     * @return x position of 1st detector.
+     */
     __host__ __device__ T   pos0x() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->pos0x();
     }
 
-    // x posision of 2nd detector
+    /**
+     * @return x position of 2nd detector.
+     */
     __host__ __device__ T   pos1x() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->pos1x();
     }
 
-    // number of angular steps
+    /**
+     * @return Number of angular steps.
+     */
     __host__ __device__ int na() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->na();
     }
 
-    // number of detector segments 1st det, z direction
+    /**
+     * @return Number of detector segments 1st det, z direction.
+     */
     __host__ __device__ int n0z() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->n0z();
     }
 
-    // number of detector segments 1st det, y direction
+    /**
+     * @return Number of detector segments 1st det, y direction.
+     */
     __host__ __device__ int n0y() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->n0y();
     }
 
-    // number of detector segments 2nd det, z direction
+    /**
+     * @return Number of detector segments 2nd det, z direction.
+     */
     __host__ __device__ int n1z() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->n1z();
     }
 
-    // number of detector segments 2nd det, y direction
+    /**
+     * @return Number of detector segments 2nd det, y direction.
+     */
     __host__ __device__ int n1y() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->n1y();
     }
 
-    // angular step [°]
+    /**
+     * @return Angular step [°].
+     */
     __host__ __device__ T   da() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->da();
     }
 
-    // x edge length of one detector segment (same for both detectors)
+    /**
+     * @return x edge length of one detector segment (same for both detectors).
+     */
     __host__ __device__ T   segx() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->segx();
     }
 
-    // y edge length of one detector segment (same for both detectors)
+    /**
+     * @return y edge length of one detector segment (same for both detectors).
+     */
     __host__ __device__ T   segy() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->segy();
     }
     
-    // z edge length of one detector segment (same for both detectors)
+    /**
+     * @return z edge length of one detector segment (same for both detectors).
+     */
     __host__ __device__ T   segz() const
     {
       return static_cast<ConcreteMeasurementSetup*>(this)->segz();
@@ -121,6 +154,10 @@ class MeasurementSetup
 //    }
 };
 
+/**
+ * @brief Template specialization for the experimental detector setup of the
+ * engineering PET (ePET) measurements.
+ */
 template<typename T>
 class DefaultMeasurementSetup : public MeasurementSetup<T, DefaultMeasurementSetup<T> >
 {

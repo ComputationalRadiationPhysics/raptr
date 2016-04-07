@@ -1,11 +1,9 @@
-/** @file H5File2DefaultMeasurementList.h */
-/* 
- * File:   hdf5File2MeasurementList.h
- * Author: malte
- *
- * Created on 18. Oktober 2014, 22:33
+/** @file H5File2DefaultMeasurementList.h
+ * 
+ *  @brief Header file that defines function template
+ *  H5File2DefaultMeasurementList which reads measurement data from file and
+ *  returns it as DefaultMeasurementList object.
  */
-
 #ifndef HDF5FILE2MEASUREMENTLIST_H
 #define	HDF5FILE2MEASUREMENTLIST_H
 

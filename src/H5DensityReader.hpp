@@ -1,7 +1,8 @@
-/** @file H5DensityReader.hpp */
-/* Author: malte
- *
- * Created on 9. April 2015, 15:14 */
+/** @file H5DensityReader.hpp
+ * 
+ *  @brief Header file that defines class H5DensityReader that reads density
+ *  data from HDF5 files.
+ */
 
 #ifndef H5DENSITYREADER_HPP
 #define	H5DENSITYREADER_HPP
