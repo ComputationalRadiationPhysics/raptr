@@ -91,11 +91,41 @@ target_link_libraries( reco ${LIBS} )
 target_link_libraries( reco ${CUDA_cusparse_LIBRARY} )
 target_link_libraries( reco ${CUDA_cublas_LIBRARY} )
 
-## Create build target for each test file
-file(GLOB CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cu")
-file(GLOB CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cpp")
+## Create build target for backprojection.cu
+cuda_add_executable( backprojection src/tests/backprojection.cu )
+target_link_libraries( backprojection epetreco )
+target_link_libraries( backprojection ${LIBS} )
+target_link_libraries( backprojection ${CUDA_cusparse_LIBRARY} )
+target_link_libraries( backprojection ${CUDA_cublas_LIBRARY} )
 
-add_custom_target(ttt )
+## Create build target for pureSMCalculation.cu
+cuda_add_executable( pureSMCalculation src/tests/pureSMCalculation.cu )
+target_link_libraries( pureSMCalculation epetreco )
+target_link_libraries( pureSMCalculation ${LIBS} )
+target_link_libraries( pureSMCalculation ${CUDA_cusparse_LIBRARY} )
+target_link_libraries( pureSMCalculation ${CUDA_cublas_LIBRARY} )
+
+## Create build target for each test file
+add_custom_target(TESTING_EXECS)
+
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_convertCsr2Ecsr.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_cooSort.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_CudaSMLine.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_cusparseWrapper.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_getSystemMatrixFromWorkqueue.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_getWorkqueue.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_MeasurementSetupLinIndex.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_MeasurementSetupTrafo2CartCoord.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_mlemOperations.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_VoxelGridLinIndex.cu")
+
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_FileTalk.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5DensityWriter.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Reader.cpp")
+
+
+#file(GLOB CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cu")
+#file(GLOB CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cpp")
 
 foreach(CU_FILE ${CU_TEST_FILES})
     get_filename_component(CU_OUT ${CU_FILE} NAME_WE)
@@ -104,7 +134,7 @@ foreach(CU_FILE ${CU_TEST_FILES})
     target_link_libraries( ${CU_OUT} ${LIBS} )
     target_link_libraries( ${CU_OUT} ${CUDA_cusparse_LIBRARY} )
     target_link_libraries( ${CU_OUT} ${CUDA_cublas_LIBRARY} )
-    add_dependencies(ttt ${CU_OUT})
+    add_dependencies(TESTING_EXECS ${CU_OUT})
 endforeach()
 
 foreach(CPP_FILE ${CPP_TEST_FILES})
@@ -112,7 +142,7 @@ foreach(CPP_FILE ${CPP_TEST_FILES})
     add_executable( ${CPP_OUT} EXCLUDE_FROM_ALL ${CPP_FILE} )
     target_link_libraries( ${CPP_OUT} epetreco )
     target_link_libraries( ${CPP_OUT} ${LIBS} )
-    add_dependencies(ttt ${CU_OUT})
+    add_dependencies(TESTING_EXECS ${CPP_OUT})
 endforeach()
 
 
