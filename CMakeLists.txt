@@ -1,6 +1,15 @@
 project(raptr)
 cmake_minimum_required(VERSION 2.8.10.1)
 
+
+###############################################################################
+# Find Boost
+###############################################################################
+find_package(Boost 1.58.0 COMPONENTS unit_test_framework REQUIRED)
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
+
+
 ###############################################################################
 # Find CUDA
 ###############################################################################
@@ -145,6 +154,12 @@ foreach(CPP_FILE ${CPP_TEST_FILES})
     add_dependencies(TESTING_EXECS ${CPP_OUT})
 endforeach()
 
+
+# UT test cases
+list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/UT.cpp")
+list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/emptyUT.cpp")
+add_executable(check EXCLUDE_FROM_ALL ${CPP_UT_FILES})
+target_link_libraries(check ${LIBS})
 
 
 
