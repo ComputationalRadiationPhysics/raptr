@@ -59,8 +59,10 @@ endif()
 # Flags
 ################################################################################
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -arch=sm_35 -Xcompiler")
+set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -std=c++11")
 
 ## Additional debug information
 #set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")
@@ -158,10 +160,11 @@ endforeach()
 # UT test cases
 list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/UT.cpp")
 list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/emptyUT.cpp")
-add_executable(check EXCLUDE_FROM_ALL ${CPP_UT_FILES})
-target_link_libraries(check ${LIBS})
 
+list(APPEND CU_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/cooSortUT.cu")
 
+cuda_add_executable(check_all EXCLUDE_FROM_ALL ${CPP_UT_FILES} ${CU_UT_FILES})
+target_link_libraries(check_all ${LIBS})
 
 
 
