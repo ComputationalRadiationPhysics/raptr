@@ -1,6 +1,15 @@
 project(raptr)
 cmake_minimum_required(VERSION 2.8.10.1)
 
+
+###############################################################################
+# Find Boost
+###############################################################################
+find_package(Boost 1.58.0 COMPONENTS unit_test_framework REQUIRED)
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
+
+
 ###############################################################################
 # Find CUDA
 ###############################################################################
@@ -50,8 +59,10 @@ endif()
 # Flags
 ################################################################################
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -arch=sm_35 -Xcompiler")
+set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -std=c++11")
 
 ## Additional debug information
 #set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")
@@ -146,7 +157,13 @@ foreach(CPP_FILE ${CPP_TEST_FILES})
 endforeach()
 
 
+# UT test cases
+list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/UT.cpp")
 
+list(APPEND CU_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/cooSortUT.cu")
+
+cuda_add_executable(check_all EXCLUDE_FROM_ALL ${CPP_UT_FILES} ${CU_UT_FILES})
+target_link_libraries(check_all ${LIBS})
 
 
 

@@ -46,6 +46,7 @@ struct cooIdLess : public thrust::binary_function<cooId_t, cooId_t, bool> {
  * @param cooVal Array of matrix elements.
  * @param cooRowId Array of matrix elements' row indices.
  * @param cooColId Array of matrix elements' column indices.
+ * @param N Number of matrix elements.
  */
 template<typename T>
 __host__
@@ -68,4 +69,3 @@ void cooSort(
 }
 
 #endif	/* COOSORT_HPP */
-
