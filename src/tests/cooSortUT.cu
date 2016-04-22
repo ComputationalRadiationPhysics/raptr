@@ -20,19 +20,15 @@
  ******************************************************************************/
 BOOST_AUTO_TEST_SUITE( test_cooSort )
 
-// Seed for shuffling
-unsigned const seed = 1234;
-
-// Size of COO matrix
-int const nrows = 6;
-int const ncols = 6;
-int n = nrows*ncols;
-
 /** @brief Test the function cooSort for the scenerio where every coordinate
  * occurs exactly once.
  * @param seed Random seed for shuffling the COO matrix.
+ * @param nrows Number of matrix rows.
+ * @param ncols Number of matrix columns.
  */
-void test_cooSort_unique_shuffled( unsigned seed ) {
+void test_cooSort_unique_shuffled( unsigned const seed, int const nrows, int const ncols ) {
+  int const n = nrows*ncols;
+  
   // Create host arrays
   std::vector<int> val_host(n, 0);
   std::vector<int> row_host(n, 0);
@@ -86,7 +82,33 @@ void test_cooSort_unique_shuffled( unsigned seed ) {
 }
 
 BOOST_AUTO_TEST_CASE( test_cooSort_unique_shuffled_1 ){
-  test_cooSort_unique_shuffled( seed );
+  // Seed for shuffling
+  unsigned const seed = 1234;
+
+  // Size of COO matrix
+  int const nrows = 128;
+  int const ncols = 128;
+
+  test_cooSort_unique_shuffled( seed, nrows, ncols );
+}
+
+BOOST_AUTO_TEST_CASE( test_cooSort_unique_shuffled_empty ){
+  // Seed for shuffling
+  unsigned const seed = 1234;
+
+  // Size of COO matrix
+  int const nrows = 0;
+  int const ncols = 0;
+
+  test_cooSort_unique_shuffled( seed, nrows, ncols );  
+}
+
+BOOST_AUTO_TEST_CASE( test_cooSort_unique_shuffled_empty_NULL ){
+  int * val_devi = NULL;
+  int * row_devi = NULL;
+  int * col_devi = NULL;
+  int const n = 0;
+  cooSort<int>(val_devi, row_devi, col_devi, n);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // end test_cooSort
