@@ -1,11 +1,11 @@
 project(raptr)
-cmake_minimum_required(VERSION 2.8.10.1)
+cmake_minimum_required(VERSION 3.0)
 
 
 ###############################################################################
 # Find Boost
 ###############################################################################
-find_package(Boost 1.58.0 COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost 1.54.0 COMPONENTS unit_test_framework REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
@@ -13,7 +13,7 @@ set(LIBS ${LIBS} ${Boost_LIBRARIES})
 ###############################################################################
 # Find CUDA
 ###############################################################################
-find_package(CUDA 6.5 REQUIRED)
+find_package(CUDA 7.0 REQUIRED)
 
 ## Warning for Thrust-related Bug
 function(warn_path_cuda PATH_VARIABLE)
@@ -21,7 +21,7 @@ function(warn_path_cuda PATH_VARIABLE)
     string(FIND "${CPLUS_TOLOWER}" "cuda" CPLUS_TOLOWER_FOUND)
     if(NOT "${CPLUS_TOLOWER_FOUND}" MATCHES "-1")
         message(WARNING 
-            "Your ${PATH_VARIABLE} seems to contain CUDA includes."
+            "Your ${PATH_VARIABLE} seems to contain CUDA includes.\n"
             "This might result in the following error:\n"
             "'error: kernel launches from templates are not allowed in system files'\n"
             "To fix the problem, remove the CUDA includes from the path."
@@ -59,10 +59,9 @@ endif()
 # Flags
 ################################################################################
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -arch=sm_35 -Xcompiler")
-set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -std=c++11")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" -std=c++11)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" -arch=sm_35)
 
 ## Additional debug information
 #set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")

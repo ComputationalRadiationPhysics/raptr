@@ -1,0 +1,66 @@
+language: cpp
+
+sudo: required
+
+dist: trusty
+
+compiler:
+  - gcc
+
+env:
+#  global:
+#    - INSTALL_DIR=~/mylibs
+  CUDA=7.0-28
+
+script:
+  - ls -l
+  - mkdir build_tmp && cd build_tmp
+  - cmake ..
+  - make check_all VERBOSE=1
+
+before_script:
+#  - cat /etc/apt/sources.list
+#  - cat /etc/apt/sources.list.d/*
+  - cat /etc/apt/sources.list
+  - uname -a
+#  - apt-cache search boost
+#  - apt-cache search nvidia
+#  - sudo apt-add-repository multiverse
+#  - sudo apt-get update -qq
+#  - sudo dpkg --configure -a
+#  - sudo apt-get install -f -qq
+#  - sudo dpkg --get-selections | grep hold || { echo "All packages OK."; }
+  - sudo apt-get install -q -y cmake-data cmake
+  - cmake --version
+  
+  - sudo apt-get install -qq build-essential
+  - gcc --version && g++ --version # 4.8
+#  - sudo apt-get install -qq nvidia-common
+#  - sudo apt-get install -qq nvidia-cuda-dev nvidia-cuda-toolkit # 5.5
+  
+  - travis_retry wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_${CUDA}_amd64.deb
+  - travis_retry sudo dpkg -i cuda-repo-ubuntu1404_${CUDA}_amd64.deb
+  - travis_retry sudo apt-get update -qq
+  
+  - export CUDA_APT=${CUDA%-*}
+  - export CUDA_APT=${CUDA_APT/./-}
+#  - travis_retry sudo apt-get install -y cuda-drivers
+  - travis_retry sudo apt-get install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}
+  - travis_retry sudo apt-get install -y cuda-toolkit-${CUDA_APT}
+  - travis_retry sudo apt-get clean
+  - export CUDA_HOME=/usr/local/cuda-${CUDA%%-*}
+  - export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+  - export PATH=${CUDA_HOME}/bin:${PATH}
+  - nvcc --version
+  
+#  - sudo apt-get install -qq libboost-all-dev # 1.54.0
+  - sudo apt-get install -qq libboost-test-dev # 1.54.0
+  - sudo apt-get install -qq libopenmpi-dev openmpi-bin
+  - sudo apt-get install -qq libhdf5-dev
+  - sudo apt-get install -qq libhdf5-7
+  
+  - sudo find /usr/ -name libcuda*.so
+  - env
+
+after_script:
+#  - ls -halR $INSTALL_DIR
