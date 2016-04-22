@@ -69,4 +69,3 @@ void cooSort(
 }
 
 #endif	/* COOSORT_HPP */
-  
