@@ -159,7 +159,6 @@ endforeach()
 
 # UT test cases
 list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/UT.cpp")
-list(APPEND CPP_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/emptyUT.cpp")
 
 list(APPEND CU_UT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/cooSortUT.cu")
 
