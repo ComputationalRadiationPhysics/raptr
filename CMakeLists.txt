@@ -1,11 +1,11 @@
 project(raptr)
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.3)
 
 
 ###############################################################################
 # Find Boost
 ###############################################################################
-find_package(Boost 1.54.0 COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost 1.60.0 COMPONENTS unit_test_framework REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${Boost_LIBRARIES})
 
@@ -13,7 +13,7 @@ set(LIBS ${LIBS} ${Boost_LIBRARIES})
 ###############################################################################
 # Find CUDA
 ###############################################################################
-find_package(CUDA 7.0 REQUIRED)
+find_package(CUDA 7.5 REQUIRED)
 
 ## Warning for Thrust-related Bug
 function(warn_path_cuda PATH_VARIABLE)
@@ -40,7 +40,7 @@ warn_path_cuda("C_INCLUDE_PATH")
 # Find MPI
 ################################################################################
 find_package(MPI REQUIRED)
-include_directories(${MPI_C_INCLUDE_PATH})
+include_directories(SYSTEM ${MPI_C_INCLUDE_PATH})
 set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
 
 
@@ -48,7 +48,7 @@ set(LIBS ${LIBS} ${MPI_C_LIBRARIES})
 # Find HDF5
 ################################################################################
 find_package(HDF5 REQUIRED COMPONENTS CXX C)
-include_directories(${HDF5_INCLUDE_DIRS})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${HDF5_LIBRARIES})
 if (${HDF5_IS_PARALLEL})
   message(FATAL_ERROR "HDF5 must be non-parallel!")
@@ -59,6 +59,8 @@ endif()
 # Flags
 ################################################################################
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" -std=c++11)
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}" -arch=sm_35)

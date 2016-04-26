@@ -1,66 +1,99 @@
 language: cpp
+sudo: false
 
-sudo: required
+cache:
+  apt: true
+  directories:
+    - $HOME/.cache/cuda
+    - $HOME/.cache/cmake
+    - $HOME/.cache/boost
 
-dist: trusty
-
-compiler:
-  - gcc
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
+      - libboost-test-dev
+      - libopenmpi-dev
+      - libhdf5-serial-dev
 
 env:
-#  global:
-#    - INSTALL_DIR=~/mylibs
-  CUDA=7.0-28
+  global:
+    - CUDA_ROOT: $HOME/.cache/cuda
+    - CMAKE_ROOT: $HOME/.cache/cmake
+    - BOOST_ROOT: $HOME/.cache/boost
+    - BOOST_MIN: 106000 # careful: hard coded below
+  matrix:
+    - COMPILER=nvcc
+
+before_install:
+  - if [ "$COMPILER" == "nvcc" ]; then
+        echo "Using CUDA 7.5 ...";
+        export CXX=g++-4.9;
+        export CC=gcc-4.9;
+        export PATH=$CUDA_ROOT/bin:$PATH;
+    fi
+  - echo "$CXX $CC"
+  - $CXX --version
+  - $CC --version
+  
+install:
+  #############################################################################
+  # CMAKE                                                                     #
+  #############################################################################
+  - export PATH=$CMAKE_ROOT/bin:$PATH
+  - CMAKE_33_FOUND=$(cmake --version | grep " 3\.3\." >/dev/null && { echo 0; } || { echo 1; })
+  - if [ $CMAKE_33_FOUND -ne 0 ]; then
+      mkdir -p $CMAKE_ROOT &&
+      cd $CMAKE_ROOT &&
+      travis_retry wget --no-check-certificate http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz &&
+      tar -xzf cmake-3.3.2-Linux-x86_64.tar.gz &&
+      mv cmake-3.3.2-Linux-x86_64/* . &&
+      rm -rf cmake-3.3.2-Linux-x86_64.tar.gz cmake-3.3.2-Linux-x86_64 &&
+      cd -;
+    fi
+  - cmake --version
+  
+  #############################################################################
+  # BOOST                                                                     #
+  #############################################################################
+  - export CMAKE_PREFIX_PATH=$BOOST_ROOT:$CMAKE_PREFIX_PATH
+  # cmake --find-package -DNAME=Boost -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST
+  - echo -e "#include <boost/version.hpp>\n#include <iostream>\nint main() { std::cout << BOOST_VERSION << std::endl; return 0; }"
+        | $CXX -I$BOOST_ROOT/include -x c++ - >/dev/null || { echo 0; }
+  - ls $BOOST_ROOT
+  - BOOST_FOUND=$([ $(./a.out) -ge $BOOST_MIN ] && { echo 0; } || { echo 1; })
+  - if [ $BOOST_FOUND -ne 0 ]; then
+      mkdir -p $ BOOST_ROOT &&
+      cd $BOOST_ROOT &&
+      travis_retry wget --no-check-certificate -O boost.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.bz2/download &&
+      tar -xjf boost.tar.bz2 &&
+      cd boost_1_60_0 &&
+      ./bootstrap.sh --with-libraries=test --prefix=$BOOST_ROOT &&
+      ./b2 -j2 &&
+      ./b2 install &&
+      rm -rf boost.tar.bz2 boost_1_60_0 &&
+      cd $HOME;
+    fi
+  
+  #############################################################################
+  # CUDA                                                                      #
+  #############################################################################
+  - NVCC_FOUND=$(which nvcc >/dev/null && { echo 0; } || { echo 1; })
+  - if [ $NVCC_FOUND -ne 0 ] && [ $COMPILER == "nvcc" ]; then
+      mkdir -p $CUDA_ROOT &&
+      cd $CUDA_ROOT &&
+      travis_retry wget http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run &&
+      chmod u+x *.run &&
+      ./cuda_7.5.18_linux.run --silent --verbose --toolkit --toolkitpath=$CUDA_ROOT &&
+      rm -rf cuda_7.5.18_linux.run $CUDA_ROOT/{samples,jre,doc,share} &&
+      cd -;
+    fi
+  - which nvcc
 
 script:
   - ls -l
-  - mkdir build_tmp && cd build_tmp
-  - cmake ..
+  - mkdir -p $HOME/build && cd $HOME/build
+  - CXXFLAGS="-Werror $CXXFLAGS" cmake $TRAVIS_BUILD_DIR/
   - make check_all VERBOSE=1
-
-before_script:
-#  - cat /etc/apt/sources.list
-#  - cat /etc/apt/sources.list.d/*
-  - cat /etc/apt/sources.list
-  - uname -a
-#  - apt-cache search boost
-#  - apt-cache search nvidia
-#  - sudo apt-add-repository multiverse
-#  - sudo apt-get update -qq
-#  - sudo dpkg --configure -a
-#  - sudo apt-get install -f -qq
-#  - sudo dpkg --get-selections | grep hold || { echo "All packages OK."; }
-  - sudo apt-get install -q -y cmake-data cmake
-  - cmake --version
-  
-  - sudo apt-get install -qq build-essential
-  - gcc --version && g++ --version # 4.8
-#  - sudo apt-get install -qq nvidia-common
-#  - sudo apt-get install -qq nvidia-cuda-dev nvidia-cuda-toolkit # 5.5
-  
-  - travis_retry wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_${CUDA}_amd64.deb
-  - travis_retry sudo dpkg -i cuda-repo-ubuntu1404_${CUDA}_amd64.deb
-  - travis_retry sudo apt-get update -qq
-  
-  - export CUDA_APT=${CUDA%-*}
-  - export CUDA_APT=${CUDA_APT/./-}
-#  - travis_retry sudo apt-get install -y cuda-drivers
-  - travis_retry sudo apt-get install -y cuda-core-${CUDA_APT} cuda-cudart-dev-${CUDA_APT}
-  - travis_retry sudo apt-get install -y cuda-toolkit-${CUDA_APT}
-  - travis_retry sudo apt-get clean
-  - export CUDA_HOME=/usr/local/cuda-${CUDA%%-*}
-  - export LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-  - export PATH=${CUDA_HOME}/bin:${PATH}
-  - nvcc --version
-  
-#  - sudo apt-get install -qq libboost-all-dev # 1.54.0
-  - sudo apt-get install -qq libboost-test-dev # 1.54.0
-  - sudo apt-get install -qq libopenmpi-dev openmpi-bin
-  - sudo apt-get install -qq libhdf5-dev
-  - sudo apt-get install -qq libhdf5-7
-  
-  - sudo find /usr/ -name libcuda*.so
-  - env
-
-after_script:
-#  - ls -halR $INSTALL_DIR
