@@ -10,6 +10,12 @@
 #include <numeric>
 #include <random>
 
+// THRUST
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/device_ptr.h>
+#include <thrust/tuple.h>
+
 // RAPTR
 #include "CUDA_HandleError.hpp"
 #include "cooSort.hpp"
@@ -24,10 +30,10 @@ BOOST_AUTO_TEST_SUITE( test_cooSort )
 unsigned const test_cooSort_seed = 1234;
 
 /** @brief Number of rows in COO matrix */
-int const test_cooSort_nrows = 128;
+int const test_cooSort_nrows = 2;
 
 /** @brief Number of columns in COO matrix */
-int const test_cooSort_ncols = 128;
+int const test_cooSort_ncols = 2;
 
 /** @brief Density of COO matrix (between 0.0 and 1.0) */
 float const test_cooSort_dens = 0.7;
@@ -41,10 +47,10 @@ float const test_cooSort_dens = 0.7;
 void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int const ncols ) {
   int const n = nrows*ncols;
   
-  // Create host arrays
-  std::vector<int> val_host(n, 0);
-  std::vector<int> row_host(n, 0);
-  std::vector<int> col_host(n, 0);
+  // Create host vectors
+  thrust::host_vector<int> val_host(n, 0);
+  thrust::host_vector<int> row_host(n, 0);
+  thrust::host_vector<int> col_host(n, 0);
   
   std::iota(val_host.begin(), val_host.end(), 0);
   for(auto i=0; i<decltype(i)(val_host.size()); i++) {
@@ -52,33 +58,56 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
     col_host[i] = val_host[i]%ncols;
   }
   
-  std::vector<int> compare_val_host(val_host);
-  std::vector<int> compare_row_host(row_host);
-  std::vector<int> compare_col_host(col_host);
+  thrust::host_vector<int> compare_val_host(val_host);
+  thrust::host_vector<int> compare_row_host(row_host);
+  thrust::host_vector<int> compare_col_host(col_host);
   
   std::shuffle(val_host.begin(), val_host.end(), std::default_random_engine(seed));
   std::shuffle(row_host.begin(), row_host.end(), std::default_random_engine(seed));
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
-  // Create and copy into device arrays
-  int * val_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&val_devi, sizeof(val_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(val_devi, &val_host[0], sizeof(val_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * row_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&row_devi, sizeof(row_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(row_devi, &row_host[0], sizeof(row_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * col_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&col_devi, sizeof(col_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(col_devi, &col_host[0], sizeof(col_devi[0]) * n, cudaMemcpyHostToDevice));
+  // Create and copy into device vectors
+  thrust::device_vector<int> val_devi(val_host);
+  thrust::device_vector<int> row_devi(row_host);
+  thrust::device_vector<int> col_devi(col_host);
+  
+  thrust::zip_iterator<
+    thrust::tuple<
+      thrust::device_vector<int>::iterator,
+      thrust::device_vector<int>::iterator
+    >
+  > end =
+  thrust::make_zip_iterator(thrust::make_tuple(row_devi.data()+1, col_devi.data()+1));
+  
+  thrust::zip_iterator<
+    thrust::tuple<
+      thrust::device_vector<int>::iterator,
+      thrust::device_vector<int>::iterator
+    >
+  > begin =
+  thrust::make_zip_iterator(thrust::make_tuple(row_devi.data(), col_devi.data()));
+  
+  thrust::device_ptr<int> val_devi_ptr = val_devi.data();
+  
+  cooIdLess comp;
+ 
   
   // Sort
-  cooSort<int>(val_devi, row_devi, col_devi, n);
+//  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
+//               thrust::raw_pointer_cast(row_devi.data()),
+//               thrust::raw_pointer_cast(col_devi.data()),
+//               n);
+  thrust::sort_by_key(
+    begin,
+    end,
+    val_devi_ptr,
+    cooIdLess()
+  );
   
   // Copy back to host
-  HANDLE_ERROR(cudaMemcpy(&val_host[0], val_devi, sizeof(val_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&row_host[0], row_devi, sizeof(row_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&col_host[0], col_devi, sizeof(col_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaDeviceSynchronize());
+  val_host = val_devi;
+  row_host = row_devi;
+  col_host = col_devi;
   
   // Check results
   for(int i=0; i<n; i++) {
@@ -86,11 +115,6 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
     BOOST_CHECK_EQUAL(row_host[i], compare_row_host[i]);
     BOOST_CHECK_EQUAL(col_host[i], compare_col_host[i]);
   }
-  
-  // Release memory
-  HANDLE_ERROR(cudaFree(val_devi));
-  HANDLE_ERROR(cudaFree(row_devi));
-  HANDLE_ERROR(cudaFree(col_devi));
 }
 
 /*******************************************************************************
