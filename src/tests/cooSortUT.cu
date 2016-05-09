@@ -112,23 +112,23 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
  
   
   // Sort
-  BOOST_TEST_MESSAGE( "* Sort" );
-//  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
-//               thrust::raw_pointer_cast(row_devi.data()),
-//               thrust::raw_pointer_cast(col_devi.data()),
-//               n);
   if(cudaGetLastError() != cudaSuccess) {
     BOOST_TEST_MESSAGE( "Cuda Error!" );
   } else {
     BOOST_TEST_MESSAGE( "No cuda Error here" );
   }
+  BOOST_TEST_MESSAGE( "* Sort" );
+  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
+               thrust::raw_pointer_cast(row_devi.data()),
+               thrust::raw_pointer_cast(col_devi.data()),
+               n);
     
-  thrust::sort_by_key(
-    begin,
-    end,
-    val_devi_ptr,
-    cooIdLess()
-  );
+//  thrust::sort_by_key(
+//    begin,
+//    end,
+//    val_devi_ptr,
+//    cooIdLess()
+//  );
   
   // Copy back to host
   BOOST_TEST_MESSAGE( "* Copy back to host" );
