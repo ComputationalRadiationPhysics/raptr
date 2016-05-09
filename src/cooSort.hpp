@@ -56,11 +56,13 @@ void cooSort(
       int * const cooColId,
       int const N) {
   /* Wrap raw pointers (to make accessible by thrust algorithms) */
+  BOOST_TEST_MESSAGE( "** Wrap raw pointers ..." );
   thrust::device_ptr<T>   val = thrust::device_pointer_cast(cooVal);
   thrust::device_ptr<int> row = thrust::device_pointer_cast(cooRowId);
   thrust::device_ptr<int> col = thrust::device_pointer_cast(cooColId);
   
   /* Sort arrays by key (row, col) according to cooIdLess */
+  BOOST_TEST_MESSAGE( "** Sort arrays ..." );
   thrust::sort_by_key(
         thrust::make_zip_iterator(thrust::make_tuple(row,   col)),
         thrust::make_zip_iterator(thrust::make_tuple(row+N, col+N)),
