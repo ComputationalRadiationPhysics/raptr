@@ -82,35 +82,6 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
   BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
   BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
   
-  thrust::zip_iterator<
-    thrust::tuple<
-      thrust::device_vector<int>::iterator,
-      thrust::device_vector<int>::iterator
-    >
-  > end =
-  thrust::make_zip_iterator(thrust::make_tuple(row_devi.data()+1, col_devi.data()+1));
-  
-  thrust::zip_iterator<
-    thrust::tuple<
-      thrust::device_vector<int>::iterator,
-      thrust::device_vector<int>::iterator
-    >
-  > begin =
-  thrust::make_zip_iterator(thrust::make_tuple(row_devi.data(), col_devi.data()));
-  
-  thrust::device_ptr<int> val_devi_ptr = val_devi.data();
-  
-  cooIdLess comp;
-  
-  BOOST_TEST_MESSAGE( "* col_devi[1]: " << col_devi[1] );
-  BOOST_TEST_MESSAGE( "* accessing col_devi[1] as in sort: " << thrust::get<1>(*end) );
-  BOOST_TEST_MESSAGE( "* row_devi[1]: " << row_devi[1] );
-  BOOST_TEST_MESSAGE( "* accessing row_devi[1] as in sort: " << thrust::get<0>(*end) );
-  BOOST_TEST_MESSAGE( "* val_devi[1]: " << val_devi[1] );
-  BOOST_TEST_MESSAGE( "* accessing val_devi[1] as in sort: " << val_devi_ptr[1] );
-  BOOST_TEST_MESSAGE( "* comp(*begin, *end)= " << comp(*begin, *end) );
- 
-  
   // Sort
   if(cudaGetLastError() != cudaSuccess) {
     BOOST_TEST_MESSAGE( "Cuda Error!" );
@@ -123,13 +94,6 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
                thrust::raw_pointer_cast(col_devi.data()),
                n);
     
-//  thrust::sort_by_key(
-//    begin,
-//    end,
-//    val_devi_ptr,
-//    cooIdLess()
-//  );
-  
   // Copy back to host
   BOOST_TEST_MESSAGE( "* Copy back to host" );
   val_host = val_devi;
