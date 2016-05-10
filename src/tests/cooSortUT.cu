@@ -10,7 +10,14 @@
 #include <numeric>
 #include <random>
 
+// THRUST
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/device_ptr.h>
+#include <thrust/tuple.h>
+
 // RAPTR
+#include "Debug.hpp"
 #include "CUDA_HandleError.hpp"
 #include "cooSort.hpp"
 
@@ -24,10 +31,10 @@ BOOST_AUTO_TEST_SUITE( test_cooSort )
 unsigned const test_cooSort_seed = 1234;
 
 /** @brief Number of rows in COO matrix */
-int const test_cooSort_nrows = 128;
+int const test_cooSort_nrows = 2;
 
 /** @brief Number of columns in COO matrix */
-int const test_cooSort_ncols = 128;
+int const test_cooSort_ncols = 2;
 
 /** @brief Density of COO matrix (between 0.0 and 1.0) */
 float const test_cooSort_dens = 0.7;
@@ -40,11 +47,21 @@ float const test_cooSort_dens = 0.7;
  */
 void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int const ncols ) {
   int const n = nrows*ncols;
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "Running test_cooSort_denseCase_shuffled with ..." );
+  BOOST_TEST_MESSAGE( "... seed=" << seed );
+  BOOST_TEST_MESSAGE( "... nrows=" << nrows );
+  BOOST_TEST_MESSAGE( "... ncols=" << ncols );
+  BOOST_TEST_MESSAGE( "... n=" << n );
+#endif
   
-  // Create host arrays
-  std::vector<int> val_host(n, 0);
-  std::vector<int> row_host(n, 0);
-  std::vector<int> col_host(n, 0);
+  // Create host vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Create host vectors" );
+#endif
+  thrust::host_vector<int> val_host(n, 0);
+  thrust::host_vector<int> row_host(n, 0);
+  thrust::host_vector<int> col_host(n, 0);
   
   std::iota(val_host.begin(), val_host.end(), 0);
   for(auto i=0; i<decltype(i)(val_host.size()); i++) {
@@ -52,45 +69,59 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
     col_host[i] = val_host[i]%ncols;
   }
   
-  std::vector<int> compare_val_host(val_host);
-  std::vector<int> compare_row_host(row_host);
-  std::vector<int> compare_col_host(col_host);
+  thrust::host_vector<int> compare_val_host(val_host);
+  thrust::host_vector<int> compare_row_host(row_host);
+  thrust::host_vector<int> compare_col_host(col_host);
   
   std::shuffle(val_host.begin(), val_host.end(), std::default_random_engine(seed));
   std::shuffle(row_host.begin(), row_host.end(), std::default_random_engine(seed));
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
-  // Create and copy into device arrays
-  int * val_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&val_devi, sizeof(val_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(val_devi, &val_host[0], sizeof(val_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * row_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&row_devi, sizeof(row_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(row_devi, &row_host[0], sizeof(row_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * col_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&col_devi, sizeof(col_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(col_devi, &col_host[0], sizeof(col_devi[0]) * n, cudaMemcpyHostToDevice));
+  // Create and copy into device vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Create and copy into device vectors" );
+#endif
+  thrust::device_vector<int> val_devi(val_host);
+  thrust::device_vector<int> row_devi(row_host);
+  thrust::device_vector<int> col_devi(col_host);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* device vector sizes:" );
+  BOOST_TEST_MESSAGE( "    val_devi: " << val_devi.size() );
+  BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
+  BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
+#endif
   
   // Sort
-  cooSort<int>(val_devi, row_devi, col_devi, n);
-  
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  if(cudaGetLastError() != cudaSuccess) {
+    BOOST_TEST_MESSAGE( "Cuda Error!" );
+  } else {
+    BOOST_TEST_MESSAGE( "No cuda Error here" );
+  }
+  BOOST_TEST_MESSAGE( "* Sort" );
+#endif
+  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
+               thrust::raw_pointer_cast(row_devi.data()),
+               thrust::raw_pointer_cast(col_devi.data()),
+               n);
+    
   // Copy back to host
-  HANDLE_ERROR(cudaMemcpy(&val_host[0], val_devi, sizeof(val_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&row_host[0], row_devi, sizeof(row_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&col_host[0], col_devi, sizeof(col_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaDeviceSynchronize());
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Copy back to host" );
+#endif
+  val_host = val_devi;
+  row_host = row_devi;
+  col_host = col_devi;
   
   // Check results
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Check results" );
+#endif
   for(int i=0; i<n; i++) {
     BOOST_CHECK_EQUAL(val_host[i], compare_val_host[i]);
     BOOST_CHECK_EQUAL(row_host[i], compare_row_host[i]);
     BOOST_CHECK_EQUAL(col_host[i], compare_col_host[i]);
   }
-  
-  // Release memory
-  HANDLE_ERROR(cudaFree(val_devi));
-  HANDLE_ERROR(cudaFree(row_devi));
-  HANDLE_ERROR(cudaFree(col_devi));
 }
 
 /*******************************************************************************
@@ -143,11 +174,22 @@ BOOST_AUTO_TEST_CASE( test_cooSort_denseCase_shuffled_empty_NULL ){
 void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int const ncols, float const dens ) {
   int const n = nrows*ncols;
   int const nDens = int(n*dens);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "Running test_cooSort_sparseCase_shuffled with ..." );
+  BOOST_TEST_MESSAGE( "... seed=" << seed );
+  BOOST_TEST_MESSAGE( "... nrows=" << nrows );
+  BOOST_TEST_MESSAGE( "... ncols=" << ncols );
+  BOOST_TEST_MESSAGE( "... n=" << n );
+  BOOST_TEST_MESSAGE( "... nDens=" << nDens );
+#endif
   
-  // Create host arrays
-  std::vector<int> val_host(n, 0);
-  std::vector<int> row_host(n, 0);
-  std::vector<int> col_host(n, 0);
+  // Create host vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Create host vectors" );
+#endif
+  thrust::host_vector<int> val_host(n, 0);
+  thrust::host_vector<int> row_host(n, 0);
+  thrust::host_vector<int> col_host(n, 0);
   
   std::iota(val_host.begin(), val_host.end(), 0);
   for(auto i=0; i<decltype(i)(val_host.size()); i++) {
@@ -159,34 +201,53 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   std::shuffle(row_host.begin(), row_host.end(), std::default_random_engine(seed));
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
-  std::vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
+  thrust::host_vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
   val_host = compare_val_host;
-  std::vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
+  thrust::host_vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
   row_host = compare_row_host;
-  std::vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
+  thrust::host_vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
   col_host = compare_col_host;
   
-  // Create and copy into device arrays
-  int * val_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&val_devi, sizeof(val_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(val_devi, &val_host[0], sizeof(val_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * row_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&row_devi, sizeof(row_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(row_devi, &row_host[0], sizeof(row_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * col_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&col_devi, sizeof(col_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(col_devi, &col_host[0], sizeof(col_devi[0]) * n, cudaMemcpyHostToDevice));
+  // Create and copy into device vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Create and copy into device vectors" );
+#endif
+  thrust::device_vector<int> val_devi(val_host);
+  thrust::device_vector<int> row_devi(row_host);
+  thrust::device_vector<int> col_devi(col_host);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* device vector sizes:" );
+  BOOST_TEST_MESSAGE( "    val_devi: " << val_devi.size() );
+  BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
+  BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
+#endif
   
   // Sort
-  cooSort<int>(val_devi, row_devi, col_devi, nDens);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  if(cudaGetLastError() != cudaSuccess) {
+    BOOST_TEST_MESSAGE( "Cuda Error!" );
+  } else {
+    BOOST_TEST_MESSAGE( "No cuda Error here" );
+  }
+  BOOST_TEST_MESSAGE( "* Sort" );
+#endif
+  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
+               thrust::raw_pointer_cast(row_devi.data()),
+               thrust::raw_pointer_cast(col_devi.data()),
+               nDens);
   
   // Copy back to host
-  HANDLE_ERROR(cudaMemcpy(&val_host[0], val_devi, sizeof(val_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&row_host[0], row_devi, sizeof(row_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&col_host[0], col_devi, sizeof(col_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaDeviceSynchronize());
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Copy back to host" );
+#endif
+  val_host = val_devi;
+  row_host = row_devi;
+  col_host = col_devi;
   
   // Check results
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "* Check results" );
+#endif
   for(int i=0; i<nDens; i++) {
     bool found = false;
     for(int j=0; j<nDens; j++) {
@@ -200,17 +261,12 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
     
     if(i<(nDens-1)){
       BOOST_CHECK(row_host[i] <= row_host[i+1]);
-    }
     
-    if(row_host[i] == row_host[i+1]){
-      BOOST_CHECK(col_host[i] < col_host[i+1]);
+      if(row_host[i] == row_host[i+1]){
+        BOOST_CHECK(col_host[i] < col_host[i+1]);
+      }
     }
   }
-  
-  // Release memory
-  HANDLE_ERROR(cudaFree(val_devi));
-  HANDLE_ERROR(cudaFree(row_devi));
-  HANDLE_ERROR(cudaFree(col_devi));
 }
 
 /*******************************************************************************

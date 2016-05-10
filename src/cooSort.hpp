@@ -6,10 +6,14 @@
 #ifndef COOSORT_HPP
 #define	COOSORT_HPP
 
+// THRUST
 #include <thrust/sort.h>
 #include <thrust/functional.h>
 #include <thrust/device_ptr.h>
 #include <thrust/iterator/zip_iterator.h>
+
+// RAPTR
+#include "Debug.hpp"
 
 /**
  * @brief Type definition for a COO matrix index type.
@@ -56,11 +60,17 @@ void cooSort(
       int * const cooColId,
       int const N) {
   /* Wrap raw pointers (to make accessible by thrust algorithms) */
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "** Wrap raw pointers ..." );
+#endif
   thrust::device_ptr<T>   val = thrust::device_pointer_cast(cooVal);
   thrust::device_ptr<int> row = thrust::device_pointer_cast(cooRowId);
   thrust::device_ptr<int> col = thrust::device_pointer_cast(cooColId);
   
   /* Sort arrays by key (row, col) according to cooIdLess */
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
+  BOOST_TEST_MESSAGE( "** Sort arrays ..." );
+#endif
   thrust::sort_by_key(
         thrust::make_zip_iterator(thrust::make_tuple(row,   col)),
         thrust::make_zip_iterator(thrust::make_tuple(row+N, col+N)),
