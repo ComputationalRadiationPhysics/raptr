@@ -210,7 +210,7 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
                thrust::raw_pointer_cast(row_devi.data()),
                thrust::raw_pointer_cast(col_devi.data()),
-               n);
+               nDens);
   
   // Copy back to host
   BOOST_TEST_MESSAGE( "* Copy back to host" );
@@ -233,10 +233,10 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
     
     if(i<(nDens-1)){
       BOOST_CHECK(row_host[i] <= row_host[i+1]);
-    }
     
-    if(row_host[i] == row_host[i+1]){
-      BOOST_CHECK(col_host[i] < col_host[i+1]);
+      if(row_host[i] == row_host[i+1]){
+        BOOST_CHECK(col_host[i] < col_host[i+1]);
+      }
     }
   }
 }
