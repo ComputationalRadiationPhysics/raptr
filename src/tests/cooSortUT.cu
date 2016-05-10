@@ -159,11 +159,18 @@ BOOST_AUTO_TEST_CASE( test_cooSort_denseCase_shuffled_empty_NULL ){
 void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int const ncols, float const dens ) {
   int const n = nrows*ncols;
   int const nDens = int(n*dens);
+  BOOST_TEST_MESSAGE( "Running test_cooSort_sparseCase_shuffled with ..." );
+  BOOST_TEST_MESSAGE( "... seed=" << seed );
+  BOOST_TEST_MESSAGE( "... nrows=" << nrows );
+  BOOST_TEST_MESSAGE( "... ncols=" << ncols );
+  BOOST_TEST_MESSAGE( "... n=" << n );
+  BOOST_TEST_MESSAGE( "... nDens=" << nDens );
   
   // Create host arrays
-  std::vector<int> val_host(n, 0);
-  std::vector<int> row_host(n, 0);
-  std::vector<int> col_host(n, 0);
+  BOOST_TEST_MESSAGE( "* Create host vectors" );
+  std::host_vector<int> val_host(n, 0);
+  std::host_vector<int> row_host(n, 0);
+  std::host_vector<int> col_host(n, 0);
   
   std::iota(val_host.begin(), val_host.end(), 0);
   for(auto i=0; i<decltype(i)(val_host.size()); i++) {
@@ -175,34 +182,43 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   std::shuffle(row_host.begin(), row_host.end(), std::default_random_engine(seed));
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
-  std::vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
+  std::host_vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
   val_host = compare_val_host;
-  std::vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
+  std::host_vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
   row_host = compare_row_host;
-  std::vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
+  std::host_vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
   col_host = compare_col_host;
   
-  // Create and copy into device arrays
-  int * val_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&val_devi, sizeof(val_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(val_devi, &val_host[0], sizeof(val_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * row_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&row_devi, sizeof(row_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(row_devi, &row_host[0], sizeof(row_devi[0]) * n, cudaMemcpyHostToDevice));
-  int * col_devi = NULL;
-  HANDLE_ERROR(cudaMalloc((void**)&col_devi, sizeof(col_devi[0]) * n));
-  HANDLE_ERROR(cudaMemcpy(col_devi, &col_host[0], sizeof(col_devi[0]) * n, cudaMemcpyHostToDevice));
+  // Create and copy into device vectors
+  BOOST_TEST_MESSAGE( "* Create and copy into device vectors" );
+  thrust::device_vector<int> val_devi(val_host);
+  thrust::device_vector<int> row_devi(row_host);
+  thrust::device_vector<int> col_devi(col_host);
+  BOOST_TEST_MESSAGE( "* device vector sizes:" );
+  BOOST_TEST_MESSAGE( "    val_devi: " << val_devi.size() );
+  BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
+  BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
   
   // Sort
-  cooSort<int>(val_devi, row_devi, col_devi, nDens);
+  if(cudaGetLastError() != cudaSuccess) {
+    BOOST_TEST_MESSAGE( "Cuda Error!" );
+  } else {
+    BOOST_TEST_MESSAGE( "No cuda Error here" );
+  }
+  BOOST_TEST_MESSAGE( "* Sort" );
+  cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
+               thrust::raw_pointer_cast(row_devi.data()),
+               thrust::raw_pointer_cast(col_devi.data()),
+               n);
   
   // Copy back to host
-  HANDLE_ERROR(cudaMemcpy(&val_host[0], val_devi, sizeof(val_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&row_host[0], row_devi, sizeof(row_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaMemcpy(&col_host[0], col_devi, sizeof(col_devi[0]) * n, cudaMemcpyDeviceToHost));
-  HANDLE_ERROR(cudaDeviceSynchronize());
+  BOOST_TEST_MESSAGE( "* Copy back to host" );
+  val_host = val_devi;
+  row_host = row_devi;
+  col_host = col_devi;
   
   // Check results
+  BOOST_TEST_MESSAGE( "* Check results" );
   for(int i=0; i<nDens; i++) {
     bool found = false;
     for(int j=0; j<nDens; j++) {
@@ -222,11 +238,6 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
       BOOST_CHECK(col_host[i] < col_host[i+1]);
     }
   }
-  
-  // Release memory
-  HANDLE_ERROR(cudaFree(val_devi));
-  HANDLE_ERROR(cudaFree(row_devi));
-  HANDLE_ERROR(cudaFree(col_devi));
 }
 
 /*******************************************************************************
