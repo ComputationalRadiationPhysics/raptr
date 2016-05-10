@@ -17,6 +17,7 @@
 #include <thrust/tuple.h>
 
 // RAPTR
+#include "Debug.hpp"
 #include "CUDA_HandleError.hpp"
 #include "cooSort.hpp"
 
@@ -46,14 +47,18 @@ float const test_cooSort_dens = 0.7;
  */
 void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int const ncols ) {
   int const n = nrows*ncols;
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "Running test_cooSort_denseCase_shuffled with ..." );
   BOOST_TEST_MESSAGE( "... seed=" << seed );
   BOOST_TEST_MESSAGE( "... nrows=" << nrows );
   BOOST_TEST_MESSAGE( "... ncols=" << ncols );
   BOOST_TEST_MESSAGE( "... n=" << n );
+#endif
   
   // Create host vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Create host vectors" );
+#endif
   thrust::host_vector<int> val_host(n, 0);
   thrust::host_vector<int> row_host(n, 0);
   thrust::host_vector<int> col_host(n, 0);
@@ -73,35 +78,45 @@ void test_cooSort_denseCase_shuffled( unsigned const seed, int const nrows, int 
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
   // Create and copy into device vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Create and copy into device vectors" );
+#endif
   thrust::device_vector<int> val_devi(val_host);
   thrust::device_vector<int> row_devi(row_host);
   thrust::device_vector<int> col_devi(col_host);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* device vector sizes:" );
   BOOST_TEST_MESSAGE( "    val_devi: " << val_devi.size() );
   BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
   BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
+#endif
   
   // Sort
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   if(cudaGetLastError() != cudaSuccess) {
     BOOST_TEST_MESSAGE( "Cuda Error!" );
   } else {
     BOOST_TEST_MESSAGE( "No cuda Error here" );
   }
   BOOST_TEST_MESSAGE( "* Sort" );
+#endif
   cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
                thrust::raw_pointer_cast(row_devi.data()),
                thrust::raw_pointer_cast(col_devi.data()),
                n);
     
   // Copy back to host
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Copy back to host" );
+#endif
   val_host = val_devi;
   row_host = row_devi;
   col_host = col_devi;
   
   // Check results
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Check results" );
+#endif
   for(int i=0; i<n; i++) {
     BOOST_CHECK_EQUAL(val_host[i], compare_val_host[i]);
     BOOST_CHECK_EQUAL(row_host[i], compare_row_host[i]);
@@ -159,14 +174,17 @@ BOOST_AUTO_TEST_CASE( test_cooSort_denseCase_shuffled_empty_NULL ){
 void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int const ncols, float const dens ) {
   int const n = nrows*ncols;
   int const nDens = int(n*dens);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "Running test_cooSort_sparseCase_shuffled with ..." );
   BOOST_TEST_MESSAGE( "... seed=" << seed );
   BOOST_TEST_MESSAGE( "... nrows=" << nrows );
   BOOST_TEST_MESSAGE( "... ncols=" << ncols );
   BOOST_TEST_MESSAGE( "... n=" << n );
   BOOST_TEST_MESSAGE( "... nDens=" << nDens );
+#endif
   
   // Create host vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Create host vectors" );
 #endif
   thrust::host_vector<int> val_host(n, 0);
@@ -191,35 +209,45 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   col_host = compare_col_host;
   
   // Create and copy into device vectors
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Create and copy into device vectors" );
+#endif
   thrust::device_vector<int> val_devi(val_host);
   thrust::device_vector<int> row_devi(row_host);
   thrust::device_vector<int> col_devi(col_host);
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* device vector sizes:" );
   BOOST_TEST_MESSAGE( "    val_devi: " << val_devi.size() );
   BOOST_TEST_MESSAGE( "    row_devi: " << row_devi.size() );
   BOOST_TEST_MESSAGE( "    col_devi: " << col_devi.size() );
+#endif
   
   // Sort
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   if(cudaGetLastError() != cudaSuccess) {
     BOOST_TEST_MESSAGE( "Cuda Error!" );
   } else {
     BOOST_TEST_MESSAGE( "No cuda Error here" );
   }
   BOOST_TEST_MESSAGE( "* Sort" );
+#endif
   cooSort<int>(thrust::raw_pointer_cast(val_devi.data()),
                thrust::raw_pointer_cast(row_devi.data()),
                thrust::raw_pointer_cast(col_devi.data()),
                nDens);
   
   // Copy back to host
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Copy back to host" );
+#endif
   val_host = val_devi;
   row_host = row_devi;
   col_host = col_devi;
   
   // Check results
+#if RAPTR_DEBUG >= RAPTR_DEBUG_MINIMAL
   BOOST_TEST_MESSAGE( "* Check results" );
+#endif
   for(int i=0; i<nDens; i++) {
     bool found = false;
     for(int j=0; j<nDens; j++) {
