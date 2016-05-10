@@ -166,11 +166,12 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   BOOST_TEST_MESSAGE( "... n=" << n );
   BOOST_TEST_MESSAGE( "... nDens=" << nDens );
   
-  // Create host arrays
+  // Create host vectors
   BOOST_TEST_MESSAGE( "* Create host vectors" );
-  std::host_vector<int> val_host(n, 0);
-  std::host_vector<int> row_host(n, 0);
-  std::host_vector<int> col_host(n, 0);
+#endif
+  thrust::host_vector<int> val_host(n, 0);
+  thrust::host_vector<int> row_host(n, 0);
+  thrust::host_vector<int> col_host(n, 0);
   
   std::iota(val_host.begin(), val_host.end(), 0);
   for(auto i=0; i<decltype(i)(val_host.size()); i++) {
@@ -182,11 +183,11 @@ void test_cooSort_sparseCase_shuffled( unsigned const seed, int const nrows, int
   std::shuffle(row_host.begin(), row_host.end(), std::default_random_engine(seed));
   std::shuffle(col_host.begin(), col_host.end(), std::default_random_engine(seed));
   
-  std::host_vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
+  thrust::host_vector<int> compare_val_host(val_host.begin(), val_host.begin()+nDens);
   val_host = compare_val_host;
-  std::host_vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
+  thrust::host_vector<int> compare_row_host(row_host.begin(), row_host.begin()+nDens);
   row_host = compare_row_host;
-  std::host_vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
+  thrust::host_vector<int> compare_col_host(col_host.begin(), col_host.begin()+nDens);
   col_host = compare_col_host;
   
   // Create and copy into device vectors
