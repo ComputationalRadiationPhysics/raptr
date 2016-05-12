@@ -22,12 +22,31 @@
 #include "MeasurementSetup.hpp"
 #include <cmath>
 
+/**
+ * @brief Functor that transforms spatial coordinates from within the unit dice
+ * to spatial coordinates within a given pixel on the first detector. Out of
+ * place.
+ * 
+ * @tparam T Coordinate type.
+ * @tparam ConcreteMSTrafo2CartCoordFirstPixel CRTP derived type.
+ * @tparam ConcreteMS Measurement setup type.
+ */
 template<
       typename T
     , typename ConcreteMSTrafo2CartCoordFirstPixel
     , typename ConcreteMS >
 class MeasurementSetupTrafo2CartCoordFirstPixel {
   public:
+    /**
+     * brief Functor operation.
+     * 
+     * @param cart_coords Output coordinates.
+     * @param box_coords Input coodinates (within unit dice).
+     * @param id0z Pixel index in z direction.
+     * @param id0y Pixel index in y direction.
+     * @param ida Rotation index.
+     * @param meas Measurement setup.
+     */
     __host__ __device__
     void operator()(
           T * const cart_coords, T const * const box_coords,
@@ -40,6 +59,9 @@ class MeasurementSetupTrafo2CartCoordFirstPixel {
     }
 };
 
+/**
+ * @brief Concrete derived class.
+ */
 template<
       typename T
     , typename ConcreteMS >
@@ -54,7 +76,7 @@ class DefaultMeasurementSetupTrafo2CartCoordFirstPixel
           T * const cart_coords, T const * const box_coords,
           int const id0z, int const id0y, int const ida,
           ConcreteMS const * const meas ) const {
-      // get pixel edge leghts
+      // get pixel edge lengths
       T edges[3];
       edges[0] = meas->segx();
       edges[1] = meas->segy();
@@ -105,13 +127,31 @@ class DefaultMeasurementSetupTrafo2CartCoordFirstPixel
                        + trafo[2*4 + 3] * T(1.);
     }
 };
-
+  
+/**
+ * @brief Functor that transforms spatial coordinates from within the unit dice
+ * to spatial coordinates within a given pixel on the first detector. Inplace.
+ * 
+ * @tparam T Coordinate type.
+ * @tparam ConcreteMSTrafo2CartCoordFirstPixel CRTP derived type.
+ * @tparam ConcreteMS Measurement setup type.
+ */
 template<
       typename T
     , typename C
     , typename MS >
 class MeasurementSetupTrafo2CartCoordFirstPixel_inplace {
   public:
+    /**
+     * brief Functor operation.
+     * 
+     * @param coords On call: Input coordinates. After termination: Output
+     * coordinates.
+     * @param id0z Pixel index in z direction.
+     * @param id0y Pixel index in y direction.
+     * @param ida Rotation index.
+     * @param meas Measurement setup.
+     */
     __host__ __device__
     void operator()(
           T * const coords,
@@ -124,6 +164,9 @@ class MeasurementSetupTrafo2CartCoordFirstPixel_inplace {
     }
 };
 
+/**
+ * @brief Concrete derived class.
+ */
 template<
       typename T
     , typename MS >
@@ -138,7 +181,7 @@ class DefaultMeasurementSetupTrafo2CartCoordFirstPixel_inplace
           T * const coords,
           int const id0z, int const id0y, int const ida,
           MS const * const meas ) const {
-      // get pixel edge leghts
+      // get pixel edge lengths
       T edges[3];
       edges[0] = meas->segx();
       edges[1] = meas->segy();
@@ -191,13 +234,31 @@ class DefaultMeasurementSetupTrafo2CartCoordFirstPixel_inplace
     }
 };
 
+/**
+ * @brief Functor that transforms spatial coordinates from within the unit dice
+ * to spatial coordinates within a given pixel on the second detector. Out of
+ * place.
+ * 
+ * @tparam T Coordinate type.
+ * @tparam ConcreteMSTrafo2CartCoordFirstPixel CRTP derived type.
+ * @tparam ConcreteMS Measurement setup type.
+ */
 template<
       typename T
     , typename ConcreteMSTrafo2CartCoordSecndPixel
     , typename ConcreteMS >
 class MeasurementSetupTrafo2CartCoordSecndPixel {
   public:
-    __host__ __device__
+    /**
+     * brief Functor operation.
+     * 
+     * @param cart_coords Output coordinates.
+     * @param box_coords Input coodinates (within unit dice).
+     * @param id1z Pixel index in z direction.
+     * @param id1y Pixel index in y direction.
+     * @param ida Rotation index.
+     * @param meas Measurement setup.
+     */__host__ __device__
     void operator()(
           T * const cart_coords, T const * const box_coords,
           int const id1z, int const id1y, int const ida,
@@ -209,6 +270,9 @@ class MeasurementSetupTrafo2CartCoordSecndPixel {
     }
 };
 
+/**
+ * @brief Concrete derived class.
+ */
 template<
       typename T
     , typename ConcreteMS >
@@ -223,7 +287,7 @@ class DefaultMeasurementSetupTrafo2CartCoordSecndPixel
           T * const cart_coords, T const * const box_coords,
           int const id1z, int const id1y, int const ida,
           ConcreteMS const * const meas ) const {
-      // get pixel edge leghts
+      // get pixel edge lengths
       T edges[3];
       edges[0] = meas->segx();
       edges[1] = meas->segy();
@@ -275,12 +339,30 @@ class DefaultMeasurementSetupTrafo2CartCoordSecndPixel
     }
 };
 
+/**
+ * @brief Functor that transforms spatial coordinates from within the unit dice
+ * to spatial coordinates within a given pixel on the second detector. Inplace.
+ * 
+ * @tparam T Coordinate type.
+ * @tparam ConcreteMSTrafo2CartCoordFirstPixel CRTP derived type.
+ * @tparam ConcreteMS Measurement setup type.
+ */
 template<
       typename T
     , typename C
     , typename MS >
 class MeasurementSetupTrafo2CartCoordSecndPixel_inplace {
   public:
+    /**
+     * brief Functor operation.
+     * 
+     * @param coords On call: Input coordinates. After termination: Output
+     * coordinates.
+     * @param id1z Pixel index in z direction.
+     * @param id1y Pixel index in y direction.
+     * @param ida Rotation index.
+     * @param meas Measurement setup.
+     */
     __host__ __device__
     void operator()(
           T * const cart_coords,
@@ -293,6 +375,9 @@ class MeasurementSetupTrafo2CartCoordSecndPixel_inplace {
     }
 };
 
+/**
+ * @brief Concrete derived class.
+ */
 template<
       typename T
     , typename MS >
