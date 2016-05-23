@@ -1,6 +1,26 @@
 project(raptr)
 cmake_minimum_required(VERSION 3.3)
 
+###############################################################################
+# Options
+###############################################################################
+option(MEASURE_TIME "Perform time measurements during execution." ON)
+if(MEASURE_TIME)
+  add_definitions("-DMEASURE_TIME")
+endif(MEASURE_TIME)
+
+if("${GRID}" STREQUAL "")
+  set(GRID "GRID64")
+endif()
+set(_GRID ${GRID} CACHE STRING "Description.")
+
+# Add voxel grid macro names as options here:
+set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128")
+add_definitions("-D${_GRID}")
+
+## Additional debug information
+#set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")
+
 
 ###############################################################################
 # Find Boost
@@ -64,12 +84,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}; -arch=sm_35)
-
-## Additional debug information
-#set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")
-
-add_definitions("-DGRID64")
-add_definitions("-DMEASURE_TIME")
 
 
 ###############################################################################
