@@ -1,9 +1,9 @@
 **raptr**
 =====
 
-Intro
+Introduction
 -----
-**raptr** stands for *reconstruction of activity from PET data using rays*. It is a code developped at the HZDR for iterative algebraic image reconstruction of activity densities from PET measurements. **raptr** uses CUDA devices for acceleration and runs parallely across multiple nodes.
+**raptr** stands for *reconstruction of activity from PET data using rays*. It is a code developed at the HZDR for iterative algebraic image reconstruction of activity densities from PET measurements. **raptr** uses CUDA devices for acceleration and runs parallely across multiple nodes.
 
 *******************************************************************************
 
@@ -79,13 +79,15 @@ The following terms are used in the sense as defined below.
 Install
 -----
 ### Mandatory requirements
-* **gcc** (getestet: 4.8.2)
-* [**CUDA (including CUDA Toolkit)**](https://developer.nvidia.com/cuda-downloads) (getestet: 6.5)
+* **cmake** (3.3 or higher)
+* **gcc** (testet: 4.9.2)
+* [**CUDA (including CUDA Toolkit)**](https://developer.nvidia.com/cuda-downloads) (7.5 or higher)
 * at least one **CUDA** capable **GPU**
-    - Compute capability **sm_35** or higher
-* **OpenMPI** (getestet: 1.8.4)
-* **HDF5** (getestet: 1.8.14, non-parallel, c++)
-* **git** (getestet: 1.7.9.5)
+    - Compute capability **3.5** or higher
+* **OpenMPI** (testet: 1.8.4)
+* **HDF5** (testet: 1.8.14, non-parallel, c++)
+* **git** (testet: 1.7.9.5)
+* **Boost.Test** (Boost 1.60.0 or higher)
 
 ### Mandatory environment variables
 * `CUDA_ROOT`: CUDA installation directory
@@ -95,22 +97,22 @@ Install
 ### <a id="installation-step-by-step">Installation step by step</a>
 The following steps will install **raptr** in the standard configuration. But you can also [use a different configuration](#configuration).
 
-1. **Get access to the source code**:
-    1. [Sign up for GitHub](https://help.github.com/articles/signing-up-for-a-new-github-account/)
-    2. Send an E-Mail to m.zacharias@hzdr.de **asking** for *access to raptr* and **telling** your GitHub username
-    3. Wait to be added as a collaborator.
-2. **Setup directories**: `mkdir ~/src`
-3. **Download the source code**:
-    1. `git clone https://github.com/ComputationalRadiationPhysics/raptr.git ~/src/raptr`
-        - *optional*: update the source code with `cd ~/src/raptr && git pull`
-4. **Compile**: `cd ~/src/raptr && make reco.out && make backprojection.out`
+1. **Setup directories**: `mkdir ~/src ~/build`
+2. **Download the source code**:
+    * `git clone https://github.com/ComputationalRadiationPhysics/raptr.git ~/src/raptr`
+    * *optional*: update the source code with `cd ~/src/raptr && git pull`
+3. **Compile**:
+    * `cd ~/build`
+    * `cmake ~/src/raptr/`
+    * *optional*: `ccmake ~/build` 
+    * `make reco && make backprojection`
 
 *******************************************************************************
 
 
 Usage
 -----
-Usable **raptr** executables include `reco.out`, `backprojection.out` and `pureSMCalculation.out`. 
+Usable **raptr** executables include `reco`, `backprojection` and `pureSMCalculation`. 
 
 ### <a id="configuration">Configuration</a>
 **raptr** executables are always compiled for a *specific voxel grid* and a *specific measurement setup* and time measurement can either be on or off. The standard configuration is:
@@ -119,17 +121,19 @@ Usable **raptr** executables include `reco.out`, `backprojection.out` and `pureS
 * Measurement setup with 180x13x13x13x13 channels, for details see [real_measurementsetup_defines.h](src/real_measurementsetup_defines.h)
 * Time measurement on
 
-For a different configuration, alterations have to be made before step *"4. Compile"* during the [installation](#installation-step-by-step).
+For a different configuration, alterations have to be made before/during step *"3. Compile"* during the [installation](#installation-step-by-step).
 
 * **Use a different voxel grid**:
-   1. *Optional*: Define your voxel grid in `voxelgrid_defines.h` and make it switchable by a precompiler macro like the others
-   2. Set your voxel grid's macro in the `Makefile`
+   * *Optional*:
+      1. Define your voxel grid in `voxelgrid_defines.h` and make it switchable by a precompiler macro like the others
+      2. Add your voxel grid's macro as an option for `_GRID` in CMakeLists.txt
+   * Use `ccmake` to set `_GRID` to the desired option
 
 * **Use a different measurement setup**: *This will only work for setups similar to ours!*
    * Define your measurement setup by altering the numerical values in `real_measurementsetup_defines.h`
 
 * **Use/don't use time measurement during code execution**:
-   * Set/unset the precompiler macro `MEASURE_TIME`
+   * Use `ccmake` to set/unset `MEASURE_TIME`
 
 ### Run
 **raptr** executables have to be started with `mpiexec`. To run them:
@@ -160,12 +164,12 @@ For a different configuration, alterations have to be made before step *"4. Comp
 MPI instances of **raptr** executables will use a CUDA device that is visible to them. That may lead to conflicting CUDA device access attempts. To avoid such conflicts, make sure that no device is visible to more than one process. E.g. set the environment variable `CUDA_VISIBLE_DEVICES` accordingly.
 
 ### Programs in particular
-#### reco.out
+#### reco
 ... is the executable that actually performs the reconstruction.
 
-**reco.out** is called like this:
+**reco** is called like this:
 ```bash
-reco.out MEAS_FN ACTI_FN NRAYS SENS_FN NIT GUESS_FN
+reco MEAS_FN ACTI_FN NRAYS SENS_FN NIT GUESS_FN
 ```
 All arguments are mandatory. Their meaning is as follows:
 
@@ -187,12 +191,12 @@ All arguments are mandatory. Their meaning is as follows:
 * `GUESS_FN`:
   Filename of first guess file.
 
-#### **backprojection.out**
+#### **backprojection**
 ... is the executable that performs an unfiltered backprojection of measurement data onto the voxel grid.
 
-**backprojection.out** is called like this:
+**backprojection** is called like this:
 ```bash
-backprojection.out MEAS_FN SUMBP_FN NRAYS
+backprojection MEAS_FN SUMBP_FN NRAYS
 ```
 All arguments are mandatory. Their meaning is as follows:
 
@@ -205,12 +209,12 @@ All arguments are mandatory. Their meaning is as follows:
 * `NRAYS`:
   Number of rays that are used for sampling a single detector channel.
 
-#### **pureSMCalculation.out**
+#### **pureSMCalculation**
 ... is an executable that is mainly used for time measuring.
 
-**pureSMCalculation.out** is called like this:
+**pureSMCalculation** is called like this:
 ```bash
-pureSMCalculation.out MEAS_FN NRAYS
+pureSMCalculation MEAS_FN NRAYS
 ```
 All arguments are mandatory. Their meaning is as follows:
 
@@ -249,7 +253,7 @@ Additional content in the input files is allowed but not part of the data format
 
 
 ### Output Data
-The executable **reco.out** writes the reconstructed activity into a density file. Activity is stored as one value per voxel of the reconstruction voxel grid. The density file is of HDF5 type and has a special structure that represents the spatial ordering of the voxels:
+The executable **reco** writes the reconstructed activity into a density file. Activity is stored as one value per voxel of the reconstruction voxel grid. The density file is of HDF5 type and has a special structure that represents the spatial ordering of the voxels:
 
 **Structure of density files:**
 
