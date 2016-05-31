@@ -46,7 +46,10 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <algorithm>
+#include <cassert>
 
+namespace SystemMatrixDeviceLimits {
+  
 /* [512 * 1024 * 1024 / 4] (512 MiB of float or int); max # of elems in COO
  * matrix arrays on GPU */
 MemArrSizeType const LIMBYTES(512*1024*1024);
@@ -55,58 +58,99 @@ MemArrSizeType const LIMNNZ(LIMBYTES/MemArrSizeType(sizeof(val_t)));
 /* Max # of channels in COO matrix arrays */
 ListSizeType const LIMM(LIMNNZ/VGRIDSIZE);
 
-int main(int argc, char ** argv) {
-  /* NUMBER OF RAYS PER CHANNEL */
-  int const nrays(atoi(argv[3]));
+} // SystemMatrixDeviceLimits
+
+void parse_commandline(
+        char ** argv,
+        std::string & voxelDataInputFilename,
+        std::string & forwardprojectionOutputFilename,
+        int & nrays ) {
+  voxelDataInputFilename = std::string(argv[1]);
+  forwardprojectionOutputFilename = std::string(argv[2]);
+  nrays = atoi(argv[3]);
+}
+
+void set_setup( DefaultMeasurementSetup<val_t> & setup ) {
+  setup = MS(POS0X, POS1X, NA, N0Z, N0Y, N1Z, N1Y, DA, SEGX, SEGY, SEGZ);
+}
+
+void set_grid( DefaultVoxelGrid<val_t> & grid ) {
+  grid = VG(GRIDOX, GRIDOY, GRIDOZ, GRIDDX, GRIDDY, GRIDDZ, GRIDNX, GRIDNY, GRIDNZ);
+}
+
+void copy_to_device_constant_memory(
+        int const & nrays,
+        DefaultMeasurementSetup<val_t> const & setup,
+        DefaultVoxelGrid<val_t> const & grid ) {
   HANDLE_ERROR(cudaMemcpyToSymbol(nrays_const, &nrays, sizeof(int)));
-  
-  // Measurement setup
-  DefaultMeasurementSetup<val_t> setup = MS(POS0X, POS1X, NA, N0Z, N0Y, N1Z, N1Y, DA, SEGX, SEGY, SEGZ);
   HANDLE_ERROR(cudaMemcpyToSymbol(setup_const, &setup, sizeof(MS)));
-  
-  /* VOXEL GRID */
-  VG grid = VG(GRIDOX, GRIDOY, GRIDOZ, GRIDDX, GRIDDY, GRIDDZ, GRIDNX, GRIDNY, GRIDNZ);
   HANDLE_ERROR(cudaMemcpyToSymbol(grid_const, &grid, sizeof(grid)));
+}
+
+void set_measurement_list_complete(
+        thrust::host_vector<int> & measList,
+        DefaultMeasurementSetup<val_t> const & setup ) {
+  int size = setup.na() * setup.n0z() * setup.n0y() * setup.n1z() * setup.n1y();
+  measList = std::vector<int>(size, 0);
+  std::iota(measList.begin(), measList.end(), 0);
+}
+
+void assert_feasibility ( MemArrSizeType const & maxNnz ) {
+  // Calculate number of SM chunks needed
+  ChunkGridSizeType NChunks = nChunks<ChunkGridSizeType, MemArrSizeType>(
+          maxNnz, MemArrSizeType(SystemMatrixDeviceLimits::LIMM*VGRIDSIZE));
   
+  assert(NChunks <= 1);
+}
   
-  // Parse command line arguments
-  std::string const voxelIfn(argv[1]);    // Voxel data file filename
-  std::string const ofn(argv[2]);         // Output filename
+
+
+int main(int argc, char ** argv) {
+  std::string                     voxelIfn;
+  std::string                     projectionOfn;
+  int                             nrays;
   
-  // Read voxel data
-  thrust::host_vector<val_t> voxelData;
-  voxelData = readHDF5_Density<val_t>( voxelIfn );
-  std::cout << "voxelData.size(): " << voxelData.size() << std::endl;
+  parse_commandline(argv, voxelIfn, projectionOfn, nrays);
   
-  // Copy voxel data to device
+  DefaultMeasurementSetup<val_t>  setup;
+  DefaultVoxelGrid<val_t>         grid;
+  
+  set_setup(setup);
+  set_grid(grid);
+  copy_to_device_constant_memory(nrays, setup, grid);
+  
+  // Read voxel data, copy to device
+  thrust::host_vector<val_t>   voxelData = readHDF5_Density<val_t>( voxelIfn );
   thrust::device_vector<val_t> voxelData_devi( voxelData );
   
-  // Write channel data
-  int channelDataNum = setup.na() * setup.n0z() * setup.n0y() * setup.n1z() * setup.n1y();
-  std::vector<int> channelData(channelDataNum, 0);
-  std::iota(channelData.begin(), channelData.end(), 0);
-  std::cout << "channelData: ";
-  for(unsigned i=0; i<channelData.size(); i++) std::cout << channelData[i] << ", ";
+  std::cout << "voxelData.size(): " << voxelData.size() << std::endl;
+  
+  // Set measurement list, copy to device
+  thrust::host_vector<int>   measList;
+  set_measurement_list_complete(measList, setup);
+  thrust::device_vector<int> measList_devi( measList );
+  
+  std::cout << "measList: ";
+  for(unsigned i=0; i<measList.size(); i++) std::cout << measList[i] << ", ";
   std::cout << std::endl;
   
-  // Max number of non-zeros in SM to be exspected
-  MemArrSizeType maxNnz(MemArrSizeType(channelDataNum) * MemArrSizeType(VGRIDSIZE));
+  // Calculate maximum possible number of non-zeros in SM
+  MemArrSizeType maxNnz = MemArrSizeType(measList.size()) * MemArrSizeType(VGRIDSIZE);
+  
   std::cout << "maxNnz: " << maxNnz << std::endl;
   
-  ChunkGridSizeType NChunks(nChunks<ChunkGridSizeType, MemArrSizeType>(maxNnz, MemArrSizeType(LIMM*VGRIDSIZE)));
-  if(NChunks>1) {
-    exit(EXIT_FAILURE);
-  }
+  // Assert: Running this program on one GPU without looping is feasible 
+  assert_feasibility(maxNnz);
   
-  // Copy channel data to device
-  thrust::device_vector<int> channelData_devi( channelData );
-
-  // Stuff for mv
-  cusparseHandle_t handle = NULL; cusparseMatDescr_t A = NULL;
+  /* Initialize cusparse related variables - needed for SM calculation and
+   * projection */
+  cusparseHandle_t handle = NULL; /* handle to cusparse context */
+  cusparseMatDescr_t A = NULL;    /* SM matrix descriptor */
   HANDLE_CUSPARSE_ERROR(cusparseCreate(&handle));
   HANDLE_CUSPARSE_ERROR(cusparseCreateMatDescr(&A));
   HANDLE_CUSPARSE_ERROR(customizeMatDescr(A, handle));
-  val_t zero = val_t(0.); val_t one = val_t(1.);
+  val_t zero = val_t(0.);
+  val_t one = val_t(1.);
   
   // Create empty system matrix
   thrust::device_vector<int>   aCnlId_devi;
@@ -114,36 +158,37 @@ int main(int argc, char ** argv) {
   thrust::device_vector<int>   aEcsrCnlPtr_devi;
   thrust::device_vector<int>   aVxlId_devi;
   thrust::device_vector<val_t> aVal_devi;
-  create_SystemMatrix<
-          val_t
-  > (
+  create_SystemMatrix<val_t> (
           aCnlId_devi,
           aCsrCnlPtr_devi,
           aEcsrCnlPtr_devi,
           aVxlId_devi,
           aVal_devi,
           NCHANNELS,
-          LIMM,
-          VGRIDSIZE
-  );
-  thrust::device_vector<MemArrSizeType> nnz_devi(1, 0);
-  thrust::host_vector<MemArrSizeType> nnz_host(1, 0);
+          SystemMatrixDeviceLimits::LIMM,
+          VGRIDSIZE);
   
-  MemArrSizeType * nnz_dptr = thrust::raw_pointer_cast(nnz_devi.data());
+  /*****************************************************************************
+   * Prepare variables for SM calculation
+   ****************************************************************************/
+  
+  // System matrix
   int * aCnlId_dptr         = thrust::raw_pointer_cast(aCnlId_devi.data());
   int * aCsrCnlPtr_dptr     = thrust::raw_pointer_cast(aCsrCnlPtr_devi.data());
   int * aEcsrCnlPtr_dptr    = thrust::raw_pointer_cast(aEcsrCnlPtr_devi.data());
   int * aVxlId_dptr         = thrust::raw_pointer_cast(aVxlId_devi.data());
   val_t * aVal_dptr         = thrust::raw_pointer_cast(aVal_devi.data());
   
+  // For return: Number of non-zero SM elements
+  thrust::host_vector<MemArrSizeType>   nnz_host(1, 0);
+  thrust::device_vector<MemArrSizeType> nnz_devi(nnz_host);
+  MemArrSizeType * nnz_dptr = thrust::raw_pointer_cast(nnz_devi.data());
   
   // Array of cnl ids: Calculate those SM lines
-  int * yRowId_dptr = thrust::raw_pointer_cast(channelData_devi.data()); 
+  int * yRowId_dptr = thrust::raw_pointer_cast(measList_devi.data()); 
   // Number of SM lines to calculate
-  ListSizeType m = channelDataNum;
+  ListSizeType m = measList.size();
   
-  
-  std::cout << "0" << std::endl;
   
   
   // Calculate system matrix
@@ -164,16 +209,16 @@ int main(int argc, char ** argv) {
           yRowId_dptr, &m,
           handle);
   HANDLE_ERROR(cudaDeviceSynchronize());
-  nnz_host = nnz_devi;
-  std::cout << "nnz: " << nnz_host[0] << std::endl;
   
-  for(int i=0; i<nnz_host[0]; i++) std::cout << aVal_devi[i];
+  // Copy number of non-zero elements to host
+  nnz_host = nnz_devi;
+  
+  std::cout << "nnz: " << nnz_host[0] << std::endl;
+  for(MemArrSizeType i=0; i<nnz_host[0]; i++) std::cout << aVal_devi[i];
   std::cout << std::endl;
   
-  
-  
-  // Project
-  thrust::device_vector<val_t> projection_devi(channelDataNum, 0);
+  // Forwardprojection
+  thrust::device_vector<val_t> projection_devi(measList.size(), 0);
   CSRmv<
           val_t
   > () ( 
@@ -194,20 +239,15 @@ int main(int argc, char ** argv) {
   HANDLE_ERROR(cudaDeviceSynchronize());
   
   
-  std::cout << "2" << std::endl;
   
-  
-  // Copy projection back to host
+  // Copy forwardprojection result back to host
   thrust::host_vector<val_t> projection( projection_devi );
+  
   std::vector<val_t> std_projection(projection.size(), 0);
   for(unsigned i=0; i<projection.size(); i++) std_projection[i] = projection[i];
   
-  
-  std::cout << "3" << std::endl;
-  
-  
-  // Write Projection to file
-  writeHDF5_MeasVct(std_projection, ofn, setup);
+  // Write result to file
+  writeHDF5_MeasVct(std_projection, projectionOfn, setup);
 
   return 0;
 }
