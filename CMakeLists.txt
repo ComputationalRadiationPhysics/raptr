@@ -144,6 +144,7 @@ list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_Measuremen
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_MeasurementSetupTrafo2CartCoord.cu")
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_mlemOperations.cu")
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_VoxelGridLinIndex.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/forwardprojection.cu")
 
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_FileTalk.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5DensityWriter.cpp")
