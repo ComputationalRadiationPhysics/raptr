@@ -149,6 +149,7 @@ list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_FileTalk.
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5DensityWriter.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Reader.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Writer.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/create_forwardprojection_input.cpp")
 
 
 #file(GLOB CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cu")
