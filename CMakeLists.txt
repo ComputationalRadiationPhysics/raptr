@@ -15,7 +15,7 @@ endif()
 set(_GRID ${GRID} CACHE STRING "Description.")
 
 # Add voxel grid macro names as options here:
-set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128")
+set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128" "GRID2")
 add_definitions("-D${_GRID}")
 
 ## Additional debug information

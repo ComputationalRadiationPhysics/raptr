@@ -115,6 +115,21 @@ extern "C" {
 #define GRIDDZ  0.00046875              /** z edge length of one voxel [m] */
 #define VGRIDSIZE (GRIDNX*GRIDNY*GRIDNZ)/** Number of voxel in the voxel grid */
 
+#else
+#ifdef GRID2
+
+#define GRIDNX 2                      /** x dimension of voxel grid */
+#define GRIDNY 2                      /** y dimension of voxel grid */
+#define GRIDNZ 2                      /** z dimension od voxel grid */
+#define GRIDOX -1.                   /** x origin of voxel grid [m] */
+#define GRIDOY -1.                   /** y origin of voxel grid [m] */
+#define GRIDOZ -1.                   /** z origin of voxel grid [m] */
+#define GRIDDX  1.              /** x edge length of one voxel [m] */
+#define GRIDDY  1.              /** y edge length of one voxel [m] */
+#define GRIDDZ  1.              /** z edge length of one voxel [m] */
+#define VGRIDSIZE (GRIDNX*GRIDNY*GRIDNZ)/** Number of voxel in the voxel grid */
+
+#endif /* GRID2 */
 #endif /* GRID128 */
 #endif /* GRID10 */
 #endif /* GRID20 */
