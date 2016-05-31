@@ -148,6 +148,7 @@ list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_VoxelGridL
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_FileTalk.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5DensityWriter.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Reader.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Writer.cpp")
 
 
 #file(GLOB CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cu")
