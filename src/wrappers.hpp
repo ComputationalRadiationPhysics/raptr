@@ -45,6 +45,9 @@
 #include "H5Writer.hpp"
 #include "MeasurementWritingTraits.hpp"
 
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+
 #if MEASURE_TIME
 #define OLD_MEASURE_TIME 1
 #undef MEASURE_TIME
@@ -92,6 +95,23 @@ void mallocD_SystemMatrix(int * & mtxCnlId_devi,
   mallocD<int>(  mtxEcsrCnlPtr_devi, (nMemRows+1));
   mallocD<int>(  mtxVxlId_devi,      (nMemRows*nCols));
   mallocD<val_t>(mtxVal_devi,        (nMemRows*nCols));
+}
+
+template<typename T>
+void create_SystemMatrix(
+      thrust::device_vector<int> & mtxCnlId,
+      thrust::device_vector<int> & mtxCsrCnlPtr,
+      thrust::device_vector<int> & mtxEcsrCnlPtr,
+      thrust::device_vector<int> & mtxVxlId,
+      thrust::device_vector<T> & mtxVal,
+      int const nRows,
+      int const nMemRows,
+      int const nCols) {
+  mtxCnlId      = thrust::device_vector<int>(nMemRows * nCols, 0);
+  mtxCsrCnlPtr  = thrust::device_vector<int>(nRows + 1,        0);
+  mtxEcsrCnlPtr = thrust::device_vector<int>(nMemRows + 1,     0);
+  mtxVxlId      = thrust::device_vector<int>(nMemRows * nCols, 0);
+  mtxVal        = thrust::device_vector<T>  (nMemRows * nCols, 0);
 }
 
 /** @brief Wrapper function for copying a sparse vector from host to device.
