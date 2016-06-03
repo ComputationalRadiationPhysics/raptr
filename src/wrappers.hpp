@@ -29,7 +29,7 @@
 #include "cuda_wrappers.hpp"
 #include "measure_time.hpp"
 #include "voxelgrid_defines.h"
-#include "real_measurementsetup_defines.h"
+#include "measurementsetup_defines.h"
 #include "getSystemMatrixDeviceOnly.cu"
 #include "cooSort.hpp"
 #include <cusparse.h>

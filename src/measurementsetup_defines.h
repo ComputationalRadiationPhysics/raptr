@@ -18,7 +18,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-/** @file real_measurementsetup_defines.h
+/** @file measurementsetup_defines.h
  * 
  *  @brief Header file that defines the setup of the measurement that led to
  *  the data which is to be reconstructed.

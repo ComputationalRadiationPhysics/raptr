@@ -32,7 +32,7 @@
 #include "MeasurementSetupLinIndex.hpp"
 #include "MeasurementSetupTrafo2CartCoord.hpp"
 #include "H5File2DefaultMeasurementList.h"
-#include "real_measurementsetup_defines.h"
+#include "measurementsetup_defines.h"
 #include "voxelgrid_defines.h"
 #include <iostream>
 #include <cassert>
