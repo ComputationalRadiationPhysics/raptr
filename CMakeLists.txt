@@ -15,7 +15,7 @@ endif()
 set(_GRID ${GRID} CACHE STRING "Description.")
 
 # Add voxel grid macro names as options here:
-set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128")
+set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128" "GRID2")
 add_definitions("-D${_GRID}")
 
 ## Additional debug information
@@ -144,10 +144,13 @@ list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_Measuremen
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_MeasurementSetupTrafo2CartCoord.cu")
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_mlemOperations.cu")
 list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_VoxelGridLinIndex.cu")
+list(APPEND CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/forwardprojection.cu")
 
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_FileTalk.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5DensityWriter.cpp")
 list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Reader.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_H5Writer.cpp")
+list(APPEND CPP_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/create_forwardprojection_input.cpp")
 
 
 #file(GLOB CU_TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/tests/test_*.cu")

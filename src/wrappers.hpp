@@ -42,6 +42,11 @@
 #include "H5DensityReader.hpp"
 #include <string>
 #include <vector>
+#include "H5Writer.hpp"
+#include "MeasurementWritingTraits.hpp"
+
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 
 #if MEASURE_TIME
 #define OLD_MEASURE_TIME 1
@@ -90,6 +95,23 @@ void mallocD_SystemMatrix(int * & mtxCnlId_devi,
   mallocD<int>(  mtxEcsrCnlPtr_devi, (nMemRows+1));
   mallocD<int>(  mtxVxlId_devi,      (nMemRows*nCols));
   mallocD<val_t>(mtxVal_devi,        (nMemRows*nCols));
+}
+
+template<typename T>
+void create_SystemMatrix(
+      thrust::device_vector<int> & mtxCnlId,
+      thrust::device_vector<int> & mtxCsrCnlPtr,
+      thrust::device_vector<int> & mtxEcsrCnlPtr,
+      thrust::device_vector<int> & mtxVxlId,
+      thrust::device_vector<T> & mtxVal,
+      int const nRows,
+      int const nMemRows,
+      int const nCols) {
+  mtxCnlId      = thrust::device_vector<int>(nMemRows * nCols, 0);
+  mtxCsrCnlPtr  = thrust::device_vector<int>(nRows + 1,        0);
+  mtxEcsrCnlPtr = thrust::device_vector<int>(nMemRows + 1,     0);
+  mtxVxlId      = thrust::device_vector<int>(nMemRows * nCols, 0);
+  mtxVal        = thrust::device_vector<T>  (nMemRows * nCols, 0);
 }
 
 /** @brief Wrapper function for copying a sparse vector from host to device.
@@ -407,6 +429,47 @@ void readHDF5_MeasList(std::vector<int> & ml, int & mlN,
   mlN = findNnz(&fMem[0], fN);
   ml.resize(mlN);
   makeMeasList(&ml[0], &fMem[0], fN);
+}
+
+/** @brief Write measurement data to hdf5.
+ * @tparam T Type of measurement data.
+ * @param vctId Array of measurement data channel ids.
+ * @param vctVal Array of measurement data channel values.
+ * @param vctNnz Number of measurement channels with data.
+ * @param ofn Output filename. 
+ * @param setup Measurement setup. */
+template<typename T>
+void writeHDF5_MeasVct(std::vector<int> & vctId, std::vector<T> & vctVal,
+      int & vctNnz, std::string const & ofn,
+      DefaultMeasurementSetup<T> const & setup ) {
+  
+  // Convert sparse measurement data to dense measurement data
+  MeasurementWritingTraits<DefaultMeasurementSetup<T> > traits;
+  unsigned memSize = traits.dim0(setup) * 
+        traits.dim1(setup) *
+        traits.dim2(setup) *
+        traits.dim3(setup) *
+        traits.dim4(setup);
+  std::vector<T> mem(memSize, 0.);
+  for(int i=0; i<vctNnz; i++) mem[vctId[i]] = vctVal[i];
+  
+  // Write
+  H5Writer<DefaultMeasurementSetup<T> > writer(ofn);
+  writer.write(mem.data(), setup);
+}
+
+/** @brief Write measurement data to hdf5.
+ * @tparam T Type of measurement data.
+ * @param vctVal Array of ordered measurement data channel values.
+ * @param ofn Output filename. 
+ * @param setup Measurement setup. */
+template<typename T>
+void writeHDF5_MeasVct(std::vector<T> & vctVal,
+      std::string const & ofn,
+      DefaultMeasurementSetup<T> const & setup ) {
+  // Write
+  H5Writer<DefaultMeasurementSetup<T> > writer(ofn);
+  writer.write(vctVal.data(), setup);
 }
 
 /** @brief Write density to hdf5.
