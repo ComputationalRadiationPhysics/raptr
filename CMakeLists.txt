@@ -18,6 +18,15 @@ set(_GRID ${GRID} CACHE STRING "Description.")
 set_property(CACHE _GRID PROPERTY STRINGS "GRID10" "GRID20" "GRID32" "GRID52" "GRID64" "GRID128")
 add_definitions("-D${_GRID}")
 
+if("${SETUP}" STREQUAL "")
+  set(SETUP "SETUP_REAL")
+endif()
+set(_SETUP ${SETUP} CACHE STRING "Description.")
+
+# Add setup macro names as options here:
+set_property(CACHE _SETUP PROPERTY STRINGS "SETUP_REAL" "SETUP_SMALL")
+add_definitions("-D${_SETUP}")
+
 ## Additional debug information
 #set(CUDA_CXX_FLAGS "${CUDA_CXX_FLAGS} -Xptxas=-v --source-in-ptx -rdynamic -lineinfo --keep --keep-dir nvcc_tm")
 
