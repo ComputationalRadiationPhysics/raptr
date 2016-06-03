@@ -26,6 +26,8 @@
 #ifndef MEASUREMENTSETUP_DEFINES
 #define MEASUREMENTSETUP_DEFINES
 
+#ifdef SETUP_REAL
+
 #define N0Z 13      // 1st detector's number of segments in z
 #define N0Y 13      // 1st detector's number of segments in y
 #define N1Z 13      // 2nd detector's number of segments in z
@@ -38,6 +40,25 @@
 #define SEGY   0.004  // y edge length of one detector segment [m]
 #define SEGZ   0.004  // z edge length of one detector segment [m]
 #define NCHANNELS NA*N0Z*N0Y*N1Z*N1Y
+
+#else
+#ifdef SETUP_SMALL
+
+#define N0Z 3      // 1st detector's number of segments in z
+#define N0Y 3      // 1st detector's number of segments in y
+#define N1Z 3      // 2nd detector's number of segments in z
+#define N1Y 3      // 2nd detector's number of segments in y
+#define NA  1     // number of angular positions
+#define DA     90.     // angular step
+#define POS0X -2.5  // position of 1st detector's center in x [m]
+#define POS1X  2.5  // position of 2nd detector's center in x [m]
+#define SEGX   1.  // x edge length of one detector segment [m]
+#define SEGY   1.  // y edge length of one detector segment [m]
+#define SEGZ   1.  // z edge length of one detector segment [m]
+#define NCHANNELS NA*N0Z*N0Y*N1Z*N1Y
+
+#endif  // SETUP_SMALL
+#endif  // SETUP_REAL
 
 #endif  // #ifndef MEASUREMENTSETUP_DEFINES
 
