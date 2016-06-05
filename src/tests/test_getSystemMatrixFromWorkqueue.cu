@@ -36,7 +36,7 @@
 #include "H5File2DefaultMeasurementList.h"
 #include "H5DensityWriter.hpp"
 #include "GridAdapter.hpp"
-#include "real_measurementsetup_defines.h"
+#include "measurementsetup_defines.h"
 #include "voxelgrid_defines.h"
 #include <iostream>
 #include "CUDA_HandleError.hpp"

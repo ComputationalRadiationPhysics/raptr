@@ -30,7 +30,7 @@
 #include <iostream>
 #include <cassert>
 #include "MeasurementSetupLinIndex.hpp"
-#include "real_measurementsetup_defines.h"
+#include "measurementsetup_defines.h"
 
 /*
  * Simple C++ Test Suite

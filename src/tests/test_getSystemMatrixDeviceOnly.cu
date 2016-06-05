@@ -31,7 +31,7 @@
 
 #include "wrappers.hpp"
 #include "getSystemMatrixDeviceOnly.cu"
-#include "real_measurementsetup_defines.h"
+#include "measurementsetup_defines.h"
 #include "voxelgrid_defines.h"
 #include "CUDA_HandleError.hpp"
 #include "typedefs.hpp"
