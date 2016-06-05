@@ -118,7 +118,7 @@ Usable **raptr** executables include `reco`, `backprojection` and `pureSMCalcula
 **raptr** executables are always compiled for a *specific voxel grid* and a *specific measurement setup* and time measurement can either be on or off. The standard configuration is:
 
 * Voxel grid with 64x64x64 voxels, for details see [voxelgrid_defines.h](src/voxelgrid_defines.h)
-* Measurement setup with 180x13x13x13x13 channels, for details see [real_measurementsetup_defines.h](src/real_measurementsetup_defines.h)
+* Measurement setup with 180x13x13x13x13 channels, for details see [measurementsetup_defines.h](src/measurementsetup_defines.h)
 * Time measurement on
 
 For a different configuration, alterations have to be made before/during step *"3. Compile"* during the [installation](#installation-step-by-step).
@@ -130,7 +130,10 @@ For a different configuration, alterations have to be made before/during step *"
    * Use `ccmake` to set `_GRID` to the desired option
 
 * **Use a different measurement setup**: *This will only work for setups similar to ours!*
-   * Define your measurement setup by altering the numerical values in `real_measurementsetup_defines.h`
+   * *Optional*:
+      1. Define your measurement setup in `measurementsetup_defines.h` and make it switchable by a precompiler macro like the others
+      2. Add your measurement sutup's macro as an option for `_SETUP` in CMakeLists.txt
+   * Use `ccmake` to set `_SETUP` to the desired option
 
 * **Use/don't use time measurement during code execution**:
    * Use `ccmake` to set/unset `MEASURE_TIME`
